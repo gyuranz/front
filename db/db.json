@@ -1,0 +1,24 @@
+{
+    "users": [
+        {
+            "email": "daein7076@gmail.com",
+            "nickname": "bigPerson",
+            "password": "abc123!@#",
+            "room_id": {
+                "id": "2x0d9c8",
+                "name": "프로젝트 관련 리액트 스터디",
+                "own_summary": "1. 어쩌구 저쩌구 2. 어쩌구 저쩌구"
+            }
+        },
+        {
+            "email": "daein7076@naver.com",
+            "nickname": "bigPerson naver",
+            "password": "abc123!@#",
+            "room_id": {
+                "id": "2x01238",
+                "name": "프로젝트 관련 JS 스터디",
+                "own_summary": "1. 어쩌구 저쩌구 2. 어쩌구 저쩌구 3. bla bla~"
+            }
+        }
+    ]
+}
