@@ -76,14 +76,14 @@ const inputVariants = {
 };
 
 interface ILoginForm {
-    email: string;
-    password: string;
+    user_id: string;
+    user_password: string;
     //! 필수 항목(not required)이 아닐시 ? 를 이용하여 적을 수 있음
     extraError?: string;
 }
 
 //동기식 방식 ( async await 사용!!!!!)
-const fetchLogin = async ({ email, password }: ILoginForm) => {
+const fetchLogin = async ({ user_id, user_password }: ILoginForm) => {
     const response = await fetch("http://localhost:8888/users");
 
     if (response.ok) {
@@ -92,9 +92,9 @@ const fetchLogin = async ({ email, password }: ILoginForm) => {
 
         //users안 객체들을 순회하면서 그 객체들의 id값과 form 컴포넌트에서 받음 account의 id값과 비교
         //서로 일치하는 것만 user에 대입
-        const user = users.find((user: ILoginForm) => user.email === email);
+        const user = users.find((user: ILoginForm) => user.user_id === user_id);
         //일치하는 user가 없거나, 비밀번호가 틀리면 해당 에러 생성
-        if (!user || user.password !== password) {
+        if (!user || user.user_password !== user_password) {
             // throw new Error("아이디 또는 비밀번호가 일치하지 않습니다.");
             console.log("wrong password");
         }
@@ -120,12 +120,12 @@ function Login() {
     } = useForm<ILoginForm>();
 
     //url 이동을 위한 useHistory
-    const onValid = async ({ email, password }: ILoginForm) => {
+    const onValid = async ({ user_id, user_password }: ILoginForm) => {
         // const user = await fetchLogin(data);
         // setValue("email", "");
         // setValue("password", "");
 
-        const response = await loginUser({ email, password });
+        const response = await loginUser({ user_id, user_password });
         console.log(response);
         if (response.status) {
             // 쿠키에 Refresh Token, store에 Access Token 저장
@@ -153,31 +153,31 @@ function Login() {
                     <GridLoginStyle>
                         <div>
                             <LoginInput
-                                type="email"
+                                type="text"
                                 variants={inputVariants}
-                                {...register("email", {
+                                {...register("user_id", {
                                     required: "please write right form",
                                 })}
-                                placeholder="Email"
+                                placeholder="ID"
                             />
                             <LoginWarning>
-                                {errors?.email?.message as string}
+                                {errors?.user_id?.message as string}
                             </LoginWarning>
 
                             <LoginInput
                                 type="password"
                                 variants={inputVariants}
-                                {...register("password", {
+                                {...register("user_password", {
                                     required: "Password is Required",
                                     minLength: {
                                         value: 8,
                                         message: "Your password is too short",
                                     },
                                 })}
-                                placeholder="Password"
+                                placeholder="PASSWORD"
                             />
                             <LoginWarning>
-                                {errors?.password?.message as string}
+                                {errors?.user_password?.message as string}
                             </LoginWarning>
                         </div>
 
@@ -186,7 +186,7 @@ function Login() {
                         </LoginButton>
                     </GridLoginStyle>
                 </form>
-                <Link to={"/join"}>JOIN</Link>
+                <Link to={"/signup"}>SIGN UP</Link>
             </Container>
         </>
     );

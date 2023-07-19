@@ -11,6 +11,7 @@ const statusError = {
 
 // 백으로 요청할 promise
 const requestPromise = (url, option) => {
+    // console.log(url, option);
     return fetch(url, option);
 };
 
@@ -23,6 +24,7 @@ const timeoutPromise = () => {
 
 // promise 요청
 const getPromise = async (url, option) => {
+    // console.log(url, option);
     return await Promise.race([requestPromise(url, option), timeoutPromise()]);
 };
 // 백으로 로그인 요청
@@ -34,13 +36,15 @@ export const loginUser = async (credentials) => {
         },
         body: JSON.stringify(credentials),
     };
+    console.log(credentials);
 
+    // console.log(credentials);
     const data = await getPromise("http://localhost:8888/users", option).catch(
         () => {
             return statusError;
         }
     );
-
+    console.log(data);
     if (parseInt(Number(data.status) / 100) === 2) {
         const status = data.ok;
         const code = data.status;

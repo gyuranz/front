@@ -66,15 +66,15 @@ const inputVariants = {
 };
 
 interface IForm {
-    email: string;
-    nickname: string;
-    password: string;
+    user_id: string;
+    user_nickname: string;
+    user_password: string;
     verifyPassword: string;
     //! 필수 항목(not required)이 아닐시 ? 를 이용하여 적을 수 있음
     extraError?: string;
 }
 
-function Join() {
+function Signup() {
     const navigate = useNavigate();
     const goLogin = () => {
         navigate("/login");
@@ -87,8 +87,9 @@ function Join() {
         setError,
     } = useForm<IForm>();
     const onValid = (data: IForm) => {
+        // 잘 찍히니 이걸 서버로 보내줘야됨
         console.log(data);
-        if (data.password !== data.verifyPassword) {
+        if (data.user_password !== data.verifyPassword) {
             setError(
                 "verifyPassword",
                 { message: "Password are not the same." },
@@ -109,22 +110,22 @@ function Join() {
                 >
                     <JoinInput
                         variants={inputVariants}
-                        {...register("email", {
-                            required: "Email is required",
+                        {...register("user_id", {
+                            required: "ID is required",
                             pattern: {
                                 value: /^[A-Za-z0-9._%+-]+@naver.com$/,
                                 message: "Only naver.com emails allowed",
                             },
                         })}
-                        placeholder="Email"
+                        placeholder="ID"
                     />
                     <LoginWarning>
-                        {errors?.email?.message as string}
+                        {errors?.user_id?.message as string}
                     </LoginWarning>
 
                     <JoinInput
                         variants={inputVariants}
-                        {...register("nickname", {
+                        {...register("user_nickname", {
                             required: "Nickname is required",
                             validate: {
                                 // async 를 사용해서 서버와 id 중복확인
@@ -145,12 +146,12 @@ function Join() {
                         placeholder="Nickname"
                     />
                     <LoginWarning>
-                        {errors?.nickname?.message as string}
+                        {errors?.user_nickname?.message as string}
                     </LoginWarning>
 
                     <JoinInput
                         variants={inputVariants}
-                        {...register("password", {
+                        {...register("user_password", {
                             required: "Password is Required",
                             minLength: {
                                 value: 8,
@@ -160,7 +161,7 @@ function Join() {
                         placeholder="Password"
                     />
                     <LoginWarning>
-                        {errors?.password?.message as string}
+                        {errors?.user_password?.message as string}
                     </LoginWarning>
 
                     <JoinInput
@@ -192,4 +193,4 @@ function Join() {
         </>
     );
 }
-export default Join;
+export default Signup;
