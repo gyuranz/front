@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form";
 import styled from "styled-components";
 import { buttonStyle, containerStyle, mainBgColor } from "./Styles";
 import { useNavigate } from "react-router-dom";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { AuthAtom, AuthLogin } from "../atoms";
 
 const Container = styled(motion.div)`
     ${containerStyle}
@@ -83,6 +85,8 @@ function Signup() {
 
     const [loginError, setLoginError] = useState("");
     const [isLoading, setIsLoaging] = useState(false);
+    // const authFunc = useRecoilValue(AuthAtom);
+    const [userState, setUserState] = useRecoilState(AuthLogin);
 
     const {
         register,
@@ -126,6 +130,19 @@ function Signup() {
             if (!response.ok) {
                 throw new Error(responseData.message);
             }
+            setUserState({
+                isLoggedIn: true,
+                userId: responseData.userId,
+                token: responseData.token,
+            });
+            localStorage.setItem(
+                "userData",
+                JSON.stringify({
+                    userId: responseData.userId,
+                    token: responseData.token,
+                })
+            );
+            // authFunc.login(responseData.userId, responseData.token);
 
             navigate(`/${user_id}`);
         } catch (err) {

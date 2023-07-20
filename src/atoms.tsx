@@ -18,3 +18,14 @@ export const MicCondition = atom({
     key: "mic",
     default: false,
 });
+
+export const AuthAtom = atom({
+    key: "AuthAtom",
+    default: {
+        isLoggedIn: false,
+        userId: "",
+        token: "",
+        login: (userId: string, token: string) => {},
+        logout: () => {},
+    },
+});

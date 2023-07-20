@@ -5,8 +5,8 @@ import styled from "styled-components";
 import { buttonStyle, containerStyle, mainBgColor } from "./Styles";
 import { Link, useNavigate } from "react-router-dom";
 
-import { useRecoilState } from "recoil";
-import { AuthLogin } from "../atoms";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { AuthAtom, AuthLogin } from "../atoms";
 
 const Container = styled(motion.div)`
     ${containerStyle}
@@ -87,6 +87,7 @@ function Login() {
 
     const [loginError, setLoginError] = useState("");
     const [isLoading, setIsLoaging] = useState(false);
+    // const authFunc = useRecoilValue(AuthAtom);
     const [userState, setUserState] = useRecoilState(AuthLogin);
 
     const {
@@ -129,6 +130,16 @@ function Login() {
                 userId: responseData.userId,
                 token: responseData.token,
             });
+
+            // console.log(userState);
+            localStorage.setItem(
+                "userData",
+                JSON.stringify({
+                    userId: responseData.userId,
+                    token: responseData.token,
+                })
+            );
+            // authFunc.login(responseData.userId, responseData.token);
 
             navigate(`/${user_id}`);
         } catch (err) {

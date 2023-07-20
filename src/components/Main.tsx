@@ -9,8 +9,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { AuthLogin, MicCondition, VolumeContidion } from "../atoms";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { AuthAtom, AuthLogin, MicCondition, VolumeContidion } from "../atoms";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const BaseContainer = styled.div`
@@ -54,26 +54,33 @@ function Main() {
         setMic((prev) => !prev);
     };
 
+    // const authFunc = useRecoilValue(AuthAtom);
+    // console.log(authFunc);
     const userState = useRecoilValue(AuthLogin);
     // console.log(userState);
 
     // const { uid } = useParams();
     const [isLoading, setIsLoading] = useState(false);
     const [loadedUsers, setLoadedUsers] = useState([]);
+    const storedData = JSON.parse(localStorage.getItem("userData") as string);
+    console.log(storedData);
 
     useEffect(() => {
         const sendRequest = async () => {
             try {
                 const response = await fetch(
-                    `http://localhost:8080/${userState.userId}`,
+                    `http://localhost:8080/${
+                        storedData.userId ? storedData.userId : userState.userId
+                    }`,
                     {
                         method: "GET",
                         headers: {
                             "Content-Type": "application/json",
-                            Authorization: " Bearer " + userState.token,
+                            Authorization: " Bearer " + storedData.token,
                         },
                     }
                 );
+                // console.log(authFunc);
 
                 const responseData = await response.json();
                 if (!response.ok) {
@@ -89,12 +96,12 @@ function Main() {
         };
         sendRequest();
     }, []);
-    console.log(loadedUsers);
+    // console.log(loadedUsers);
     return (
         <>
             <BaseContainer>
                 <MainContainer>
-                    <h1>{userState.userId}</h1>
+                    <h1>{storedData.userId}</h1>
                     <IOButton onClick={volumeControl}>
                         {volume ? (
                             <FontAwesomeIcon icon={faVolumeHigh} />
@@ -111,8 +118,8 @@ function Main() {
                     </IOButton>
                 </MainContainer>
                 <RoomList>
-                    {loadedUsers.map((room) => (
-                        <div>{room}</div>
+                    {loadedUsers.map((room, index) => (
+                        <div key={index}>{room}</div>
                     ))}
                 </RoomList>
             </BaseContainer>
