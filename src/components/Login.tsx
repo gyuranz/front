@@ -4,10 +4,9 @@ import { useForm } from "react-hook-form";
 import styled from "styled-components";
 import { buttonStyle, containerStyle, mainBgColor } from "./Styles";
 import { Link, useNavigate } from "react-router-dom";
-import { loginUser } from "../api/UserLogin";
-import { setRefreshToken } from "../storage/Cookie";
+
 import { useRecoilState } from "recoil";
-import { authTokenState, setToken } from "./Auth";
+import { AuthLogin } from "../atoms";
 
 const Container = styled(motion.div)`
     ${containerStyle}
@@ -88,6 +87,7 @@ function Login() {
 
     const [loginError, setLoginError] = useState("");
     const [isLoading, setIsLoaging] = useState(false);
+    const [userState, setUserState] = useRecoilState(AuthLogin);
 
     const {
         register,
@@ -102,10 +102,11 @@ function Login() {
         // setValue("user_password", "");
         try {
             setIsLoaging(true);
-            const response = await fetch("http://localhost:5001/users/login", {
+            const response = await fetch("http://localhost:8080/users/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    Authorization: " Bearer " + userState.token,
                 },
                 body: JSON.stringify({
                     user_id,
@@ -116,13 +117,20 @@ function Login() {
 
             setIsLoaging(false);
             setLoginError(responseData.message);
-
-            alert(responseData.message);
+            responseData.message
+                ? alert(responseData.message)
+                : alert(`${responseData.userId}님, 반갑습니다.`);
 
             if (!response.ok) {
                 throw new Error(responseData.message);
             }
-            navigate(`/users/${user_id}`);
+            setUserState({
+                isLoggedIn: true,
+                userId: responseData.userId,
+                token: responseData.token,
+            });
+
+            navigate(`/${user_id}`);
         } catch (err) {
             console.log(err);
         }

@@ -8,9 +8,9 @@ import {
     faVolumeXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useRecoilState } from "recoil";
-import { MicCondition, VolumeContidion } from "../atoms";
-import { useEffect, useState } from "react";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { AuthLogin, MicCondition, VolumeContidion } from "../atoms";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const BaseContainer = styled.div`
@@ -32,6 +32,7 @@ const RoomList = styled.div`
     ${containerStyle}
     width: 28.5vw;
     height: 90vh;
+    display: block;
 `;
 
 const IOButton = styled.button`
@@ -53,36 +54,47 @@ function Main() {
         setMic((prev) => !prev);
     };
 
-    const { uid } = useParams();
+    const userState = useRecoilValue(AuthLogin);
+    // console.log(userState);
+
+    // const { uid } = useParams();
     const [isLoading, setIsLoading] = useState(false);
-    const [loadedUsers, setLoadedUsers] = useState();
+    const [loadedUsers, setLoadedUsers] = useState([]);
 
     useEffect(() => {
         const sendRequest = async () => {
             try {
                 const response = await fetch(
-                    `http://localhost:5001/users/${uid}`
+                    `http://localhost:8080/${userState.userId}`,
+                    {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: " Bearer " + userState.token,
+                        },
+                    }
                 );
 
                 const responseData = await response.json();
                 if (!response.ok) {
                     throw new Error(responseData.message);
                 }
-                console.log(responseData);
-                setLoadedUsers(responseData.user);
-                console.log(loadedUsers);
+                // console.log(responseData.user);
+
+                setLoadedUsers(responseData.user.user_joined_room_list);
+                // console.log(loadedUsers);
             } catch (err) {
                 console.log(err);
             }
         };
         sendRequest();
     }, []);
-
+    console.log(loadedUsers);
     return (
         <>
             <BaseContainer>
                 <MainContainer>
-                    {/* <h1>{loadedUsers.user.user_id}</h1> */}
+                    <h1>{userState.userId}</h1>
                     <IOButton onClick={volumeControl}>
                         {volume ? (
                             <FontAwesomeIcon icon={faVolumeHigh} />
@@ -98,7 +110,11 @@ function Main() {
                         )}
                     </IOButton>
                 </MainContainer>
-                <RoomList>room list</RoomList>
+                <RoomList>
+                    {loadedUsers.map((room) => (
+                        <div>{room}</div>
+                    ))}
+                </RoomList>
             </BaseContainer>
         </>
     );

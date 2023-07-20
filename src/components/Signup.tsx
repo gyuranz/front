@@ -108,7 +108,7 @@ function Signup() {
         // setError("extraError", { message: "Server offline." });
         try {
             setIsLoaging(true);
-            const response = await fetch("http://localhost:5001/users/signup", {
+            const response = await fetch("/users/signup", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -127,7 +127,7 @@ function Signup() {
                 throw new Error(responseData.message);
             }
 
-            navigate(`/users/${user_id}`);
+            navigate(`/${user_id}`);
         } catch (err) {
             setIsLoaging(false);
             console.log(err);
