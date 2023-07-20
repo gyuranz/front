@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import styled from "styled-components";
 import { buttonStyle, containerStyle, mainBgColor } from "./Styles";
@@ -76,9 +76,13 @@ interface IForm {
 
 function Signup() {
     const navigate = useNavigate();
+
     const goLogin = () => {
-        navigate("/login");
+        navigate("/users/login");
     };
+
+    const [loginError, setLoginError] = useState("");
+    const [isLoading, setIsLoaging] = useState(false);
 
     const {
         register,
@@ -86,10 +90,14 @@ function Signup() {
         formState: { errors },
         setError,
     } = useForm<IForm>();
-    const onValid = (data: IForm) => {
-        // 잘 찍히니 이걸 서버로 보내줘야됨
-        console.log(data);
-        if (data.user_password !== data.verifyPassword) {
+
+    const onValid = async ({
+        user_id,
+        user_nickname,
+        user_password,
+        verifyPassword,
+    }: IForm) => {
+        if (user_password !== verifyPassword) {
             setError(
                 "verifyPassword",
                 { message: "Password are not the same." },
@@ -98,24 +106,52 @@ function Signup() {
         }
         //! 특정 항목에 해당되는 에러가 아니라, 전체 form에 해당되는 에러
         // setError("extraError", { message: "Server offline." });
+        try {
+            setIsLoaging(true);
+            const response = await fetch("http://localhost:5001/users/signup", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    user_id,
+                    user_nickname,
+                    user_password,
+                }),
+            });
+            const responseData = await response.json();
+            setIsLoaging(false);
+            setLoginError(responseData.message);
+
+            if (!response.ok) {
+                throw new Error(responseData.message);
+            }
+
+            navigate(`/users/${user_id}`);
+        } catch (err) {
+            setIsLoaging(false);
+            console.log(err);
+        }
     };
-    // console.log(errors);
-    console.log(errors);
+
     return (
         <>
             <Container variants={boxVariants} initial="start" animate="end">
+                {/* 수정 필요!!! 로딩화면 */}
+                {isLoading ? <h1>로딩 중...</h1> : null}
                 <form
                     style={{ display: "flex", flexDirection: "column" }}
                     onSubmit={handleSubmit(onValid)}
                 >
+                    <LoginWarning>{loginError}</LoginWarning>
                     <JoinInput
                         variants={inputVariants}
                         {...register("user_id", {
                             required: "ID is required",
-                            pattern: {
-                                value: /^[A-Za-z0-9._%+-]+@naver.com$/,
-                                message: "Only naver.com emails allowed",
-                            },
+                            // pattern: {
+                            //     value: /^[A-Za-z0-9._%+-]+@naver.com$/,
+                            //     message: "Only naver.com emails allowed",
+                            // },
                         })}
                         placeholder="ID"
                     />
@@ -150,11 +186,12 @@ function Signup() {
                     </LoginWarning>
 
                     <JoinInput
+                        type="password"
                         variants={inputVariants}
                         {...register("user_password", {
                             required: "Password is Required",
                             minLength: {
-                                value: 8,
+                                value: 6,
                                 message: "Your password is too short",
                             },
                         })}
@@ -165,11 +202,12 @@ function Signup() {
                     </LoginWarning>
 
                     <JoinInput
+                        type="password"
                         variants={inputVariants}
                         {...register("verifyPassword", {
                             required: "Password is Required",
                             minLength: {
-                                value: 5,
+                                value: 6,
                                 message: "Your password is too short",
                             },
                         })}

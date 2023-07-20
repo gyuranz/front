@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import styled from "styled-components";
 import { buttonStyle, containerStyle, mainBgColor } from "./Styles";
@@ -42,6 +42,7 @@ const LoginButton = styled(motion.button)`
     width: 100px;
     height: 145px;
     cursor: pointer;
+    color: white;
 `;
 
 const LoginWarning = styled.span`
@@ -82,35 +83,11 @@ interface ILoginForm {
     extraError?: string;
 }
 
-//동기식 방식 ( async await 사용!!!!!)
-const fetchLogin = async ({ user_id, user_password }: ILoginForm) => {
-    const response = await fetch("http://localhost:8888/users");
-
-    if (response.ok) {
-        //서버통신이 성공적으로 이루어지면 users에 json값 대입
-        const users = await response.json();
-
-        //users안 객체들을 순회하면서 그 객체들의 id값과 form 컴포넌트에서 받음 account의 id값과 비교
-        //서로 일치하는 것만 user에 대입
-        const user = users.find((user: ILoginForm) => user.user_id === user_id);
-        //일치하는 user가 없거나, 비밀번호가 틀리면 해당 에러 생성
-        if (!user || user.user_password !== user_password) {
-            // throw new Error("아이디 또는 비밀번호가 일치하지 않습니다.");
-            console.log("wrong password");
-        }
-
-        //모든게 일치하면 그 user 정보 return -> 이 return값이 form 컴포넌트 내 fetchLogin 함수 값으로 출력되는것
-        //form 컴포넌트에서 setUser값에 넣어야함
-        return user;
-    }
-
-    //서버 통신이 안이루어졌을떄
-    throw new Error("서버 통신이 원할하지 않습니다.");
-};
-
 function Login() {
     const navigate = useNavigate();
-    const [authToken, setAuthToken] = useRecoilState(authTokenState);
+
+    const [loginError, setLoginError] = useState("");
+    const [isLoading, setIsLoaging] = useState(false);
 
     const {
         register,
@@ -119,31 +96,36 @@ function Login() {
         setValue,
     } = useForm<ILoginForm>();
 
-    //url 이동을 위한 useHistory
+    //url 이동을 위한 useHistory? useNavigate
     const onValid = async ({ user_id, user_password }: ILoginForm) => {
-        // const user = await fetchLogin(data);
-        // setValue("email", "");
-        // setValue("password", "");
+        // setValue("user_id", "");
+        // setValue("user_password", "");
+        try {
+            setIsLoaging(true);
+            const response = await fetch("http://localhost:5001/users/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    user_id,
+                    user_password,
+                }),
+            });
+            const responseData = await response.json();
 
-        const response = await loginUser({ user_id, user_password });
-        console.log(response);
-        if (response.status) {
-            // 쿠키에 Refresh Token, store에 Access Token 저장
-            setRefreshToken(response.json.refresh_token);
-            setAuthToken(setToken(authToken, response.json.access_token));
+            setIsLoaging(false);
+            setLoginError(responseData.message);
 
-            return navigate("/");
-        } else {
-            console.log(response.json);
+            alert(responseData.message);
+
+            if (!response.ok) {
+                throw new Error(responseData.message);
+            }
+            navigate(`/users/${user_id}`);
+        } catch (err) {
+            console.log(err);
         }
-
-        //성공하면 해당 user 아이디 패스워드값 셋팅
-        // setUser(user);
-        //성공하면 해당 url로 이동(main페이지로)
-        // history.replace("/");
-
-        //! 특정 항목에 해당되는 에러가 아니라, 전체 form에 해당되는 에러
-        // setError("extraError", { message: "Server offline." });
     };
 
     return (
@@ -184,9 +166,10 @@ function Login() {
                         <LoginButton variants={inputVariants}>
                             LOG IN
                         </LoginButton>
+                        {/* <LoginWarning>{loginError}</LoginWarning> */}
                     </GridLoginStyle>
                 </form>
-                <Link to={"/signup"}>SIGN UP</Link>
+                <Link to={"/users/signup"}>SIGN UP</Link>
             </Container>
         </>
     );

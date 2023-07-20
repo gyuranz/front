@@ -10,6 +10,8 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRecoilState } from "recoil";
 import { MicCondition, VolumeContidion } from "../atoms";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 const BaseContainer = styled.div`
     /* ${containerStyle} */
@@ -51,11 +53,36 @@ function Main() {
         setMic((prev) => !prev);
     };
 
+    const { uid } = useParams();
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadedUsers, setLoadedUsers] = useState();
+
+    useEffect(() => {
+        const sendRequest = async () => {
+            try {
+                const response = await fetch(
+                    `http://localhost:5001/users/${uid}`
+                );
+
+                const responseData = await response.json();
+                if (!response.ok) {
+                    throw new Error(responseData.message);
+                }
+                console.log(responseData);
+                setLoadedUsers(responseData.user);
+                console.log(loadedUsers);
+            } catch (err) {
+                console.log(err);
+            }
+        };
+        sendRequest();
+    }, []);
+
     return (
         <>
             <BaseContainer>
                 <MainContainer>
-                    maincontainer
+                    {/* <h1>{loadedUsers.user.user_id}</h1> */}
                     <IOButton onClick={volumeControl}>
                         {volume ? (
                             <FontAwesomeIcon icon={faVolumeHigh} />
