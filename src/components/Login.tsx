@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { useRecoilState, useRecoilValue } from "recoil";
 import { AuthAtom, AuthLogin } from "../atoms";
+import { useHttpClient } from "../hooks/http-hook";
 
 const Container = styled(motion.div)`
     ${containerStyle}
@@ -85,10 +86,10 @@ interface ILoginForm {
 function Login() {
     const navigate = useNavigate();
 
-    const [loginError, setLoginError] = useState("");
     const [isLoading, setIsLoaging] = useState(false);
     // const authFunc = useRecoilValue(AuthAtom);
     const [userState, setUserState] = useRecoilState(AuthLogin);
+    const HttpClient = useHttpClient();
 
     const {
         register,
@@ -96,6 +97,7 @@ function Login() {
         formState: { errors },
         setValue,
     } = useForm<ILoginForm>();
+    // console.log(userState);
 
     //url 이동을 위한 useHistory? useNavigate
     const onValid = async ({ user_id, user_password }: ILoginForm) => {
@@ -117,15 +119,15 @@ function Login() {
             const responseData = await response.json();
 
             setIsLoaging(false);
-            setLoginError(responseData.message);
-            responseData.message
-                ? alert(responseData.message)
-                : alert(`${responseData.userNickname}님, 반갑습니다.`);
+            // responseData.message
+            //     ? alert(responseData.message)
+            //     : alert(`${responseData.userNickname}님, 반갑습니다.`);
 
             if (!response.ok) {
                 throw new Error(responseData.message);
             }
             setUserState({
+                ...userState,
                 isLoggedIn: true,
                 userId: responseData.userId,
                 userNickname: responseData.userNickname,

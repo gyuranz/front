@@ -1,19 +1,16 @@
 import { useCallback, useState } from "react";
+import { useRecoilState } from "recoil";
+import { AuthLogin } from "../atoms";
 
-interface IHttpClientForm {
-    url: string;
-    method: string;
-    body: any;
-    headers: {};
-}
 export const useHttpClient = () => {
     const [isLoading, setIsLoaging] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState("");
+    const [userState, setUserState] = useRecoilState(AuthLogin);
 
     const sendRequest = useCallback(
-        async (url: string, method = "GET", body = null, headers = {}) => {
-            setIsLoaging(true);
+        async (url: string, method: string, body: any, headers = {}) => {
             try {
+                setIsLoaging(true);
                 const response = await fetch(url, {
                     method,
                     body,
@@ -22,21 +19,38 @@ export const useHttpClient = () => {
 
                 const responseData = await response.json();
 
+                setIsLoaging(false);
                 if (!response.ok) {
                     throw new Error(responseData.message);
                 }
+                setUserState({
+                    ...userState,
+                    isLoggedIn: true,
+                    userId: responseData.userId,
+                    userNickname: responseData.userNickname,
+                    token: responseData.token,
+                });
 
-                return responseData;
+                localStorage.setItem(
+                    "userData",
+                    JSON.stringify({
+                        userId: responseData.userId,
+                        userNickname: responseData.userNickname,
+                        token: responseData.token,
+                    })
+                );
+
+                return JSON.stringify(responseData);
             } catch (err: any) {
                 setError(err.message);
+                setIsLoaging(false);
             }
-            setIsLoaging(false);
         },
         []
     );
 
     const clearError = () => {
-        setError(null);
+        setError("");
     };
     return { isLoading, error, sendRequest, clearError };
 };

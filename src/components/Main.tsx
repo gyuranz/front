@@ -1,5 +1,5 @@
 import { styled } from "styled-components";
-import { containerStyle } from "./Styles";
+import { buttonStyle, containerStyle, reverseColor } from "./Styles";
 import {
     faMicrophone,
     faMicrophoneSlash,
@@ -9,9 +9,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRecoilState } from "recoil";
-import { MicCondition, VolumeContidion } from "../atoms";
+import { AuthLogin, MicCondition, VolumeContidion } from "../atoms";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const BaseContainer = styled.div`
     /* ${containerStyle} */
@@ -44,9 +45,27 @@ const IOButton = styled.button`
     padding: 10px;
 `;
 
+const LogoutButton = styled(motion.div)`
+    ${buttonStyle}
+    ${reverseColor}
+    z-index: 999;
+    position: absolute;
+    top: 3rem;
+    cursor: pointer;
+`;
+
 function Main() {
     const [mic, setMic] = useRecoilState(MicCondition);
     const [volume, setVolume] = useRecoilState(VolumeContidion);
+    const { uid } = useParams();
+    const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadedUsers, setLoadedUsers] = useState([]);
+    const storedData = JSON.parse(localStorage.getItem("userData") as string);
+    const [userState, setUserState] = useRecoilState(AuthLogin);
+    // const authFunc = useRecoilValue(AuthAtom);
+    // console.log(authFunc);
+
     const volumeControl = () => {
         setVolume((prev) => !prev);
     };
@@ -54,17 +73,25 @@ function Main() {
         setMic((prev) => !prev);
     };
 
-    // const authFunc = useRecoilValue(AuthAtom);
-    // console.log(authFunc);
-    // const { uid } = useParams();
-
-    const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(false);
-    const [loadedUsers, setLoadedUsers] = useState([]);
-    const storedData = JSON.parse(localStorage.getItem("userData") as string);
-    console.log(storedData);
+    const LogoutHandler = () => {
+        localStorage.removeItem("userData");
+        // setUserState({
+        //     isLoggedIn: false,
+        //     userId: "",
+        //     userNickname: "",
+        //     token: "",
+        // });
+        console.log(userState);
+        navigate("/auth/login");
+    };
 
     useEffect(() => {
+        // if (storedData && uid === storedData.userId) {
+        //     console.log("hello, you are right user");
+        // } else {
+        //     navigate("/auth/login");
+        // }
+
         const sendRequest = async () => {
             try {
                 if (storedData) {
@@ -85,10 +112,21 @@ function Main() {
                         throw new Error(responseData.message);
                     }
 
+                    // console.log(responseData.user);
                     setLoadedUsers(responseData.user.user_joined_room_list);
+                    setUserState({
+                        ...userState,
+                        isLoggedIn: true,
+                        userId: responseData.user.user_id,
+                        userNickname: responseData.user.user_nickname,
+                        userJoinedRoomList:
+                            responseData.user.user_joined_room_list,
+                    });
+                    // use이펙트로 사용해서 당연히 값이 최신화되어있지 않음
+                    // console.log(userState);
                     // console.log(loadedUsers);
                 } else {
-                    navigate("/auth/login");
+                    // navigate("/auth/login");
                 }
             } catch (err) {
                 console.log(err);
@@ -96,9 +134,12 @@ function Main() {
         };
         sendRequest();
     }, []);
-    // console.log(loadedUsers);
+
+    // console.log(userState);
+    console.log(loadedUsers);
     return (
         <>
+            <LogoutButton onClick={LogoutHandler}>LOG OUT</LogoutButton>
             <BaseContainer>
                 <MainContainer>
                     <h1>{storedData && storedData.userNickname}</h1>

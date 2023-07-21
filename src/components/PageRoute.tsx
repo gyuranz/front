@@ -8,6 +8,7 @@ const MainButton = styled(motion.button)`
     ${buttonStyle}
     ${reverseColor}
     width: 300px;
+    cursor: pointer;
 `;
 
 function PageRoute() {

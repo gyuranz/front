@@ -7,6 +7,7 @@ export const AuthLogin = atom({
         userId: "",
         userNickname: "",
         token: "",
+        userJoinedRoomList: [],
     },
 });
 

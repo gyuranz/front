@@ -84,7 +84,7 @@ function Signup() {
     };
 
     const [loginError, setLoginError] = useState("");
-    const [isLoading, setIsLoaging] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     // const authFunc = useRecoilValue(AuthAtom);
     const [userState, setUserState] = useRecoilState(AuthLogin);
 
@@ -107,11 +107,12 @@ function Signup() {
                 { message: "Password are not the same." },
                 { shouldFocus: true }
             );
+            return;
         }
         //! 특정 항목에 해당되는 에러가 아니라, 전체 form에 해당되는 에러
         // setError("extraError", { message: "Server offline." });
         try {
-            setIsLoaging(true);
+            setIsLoading(true);
             const response = await fetch("http://localhost:8080/auth/signup", {
                 method: "POST",
                 headers: {
@@ -124,13 +125,14 @@ function Signup() {
                 }),
             });
             const responseData = await response.json();
-            setIsLoaging(false);
+            setIsLoading(false);
             setLoginError(responseData.message);
 
             if (!response.ok) {
                 throw new Error(responseData.message);
             }
             setUserState({
+                ...userState,
                 isLoggedIn: true,
                 userId: responseData.userId,
                 userNickname: responseData.userNickname,
@@ -144,11 +146,8 @@ function Signup() {
                     token: responseData.token,
                 })
             );
-            // authFunc.login(responseData.userId, responseData.token);
-
             navigate(`/${user_id}`);
         } catch (err) {
-            setIsLoaging(false);
             console.log(err);
         }
     };
@@ -163,6 +162,7 @@ function Signup() {
                     onSubmit={handleSubmit(onValid)}
                 >
                     <LoginWarning>{loginError}</LoginWarning>
+
                     <JoinInput
                         variants={inputVariants}
                         {...register("user_id", {
@@ -182,17 +182,17 @@ function Signup() {
                         variants={inputVariants}
                         {...register("user_nickname", {
                             required: "Nickname is required",
-                            validate: {
-                                // async 를 사용해서 서버와 id 중복확인
-                                nobig: (value) =>
-                                    value.includes("big")
-                                        ? "no 'big' allowed"
-                                        : true,
-                                noperson: (value) =>
-                                    value.includes("person")
-                                        ? "no 'person' allowed"
-                                        : true,
-                            },
+                            // validate: {
+                            //     // async 를 사용해서 서버와 id 중복확인
+                            //     nobig: (value) =>
+                            //         value.includes("big")
+                            //             ? "no 'big' allowed"
+                            //             : true,
+                            //     noperson: (value) =>
+                            //         value.includes("person")
+                            //             ? "no 'person' allowed"
+                            //             : true,
+                            // },
                             minLength: {
                                 value: 3,
                                 message: "Nickname is at least 3length",
@@ -237,13 +237,13 @@ function Signup() {
                     </LoginWarning>
 
                     <OneLineTwoButton>
+                        <JoinButton variants={inputVariants}>Join</JoinButton>
                         <CancelButton
                             variants={inputVariants}
                             onClick={goLogin}
                         >
                             Cancel
                         </CancelButton>
-                        <JoinButton variants={inputVariants}>Join</JoinButton>
                     </OneLineTwoButton>
                 </form>
             </Container>
