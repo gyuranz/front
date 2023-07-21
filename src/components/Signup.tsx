@@ -133,12 +133,14 @@ function Signup() {
             setUserState({
                 isLoggedIn: true,
                 userId: responseData.userId,
+                userNickname: responseData.userNickname,
                 token: responseData.token,
             });
             localStorage.setItem(
                 "userData",
                 JSON.stringify({
                     userId: responseData.userId,
+                    userNickname: responseData.userNickname,
                     token: responseData.token,
                 })
             );

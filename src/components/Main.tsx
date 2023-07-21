@@ -101,7 +101,7 @@ function Main() {
         <>
             <BaseContainer>
                 <MainContainer>
-                    <h1>{storedData.userId}</h1>
+                    <h1>{storedData.userNickname}</h1>
                     <IOButton onClick={volumeControl}>
                         {volume ? (
                             <FontAwesomeIcon icon={faVolumeHigh} />

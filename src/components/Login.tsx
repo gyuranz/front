@@ -120,7 +120,7 @@ function Login() {
             setLoginError(responseData.message);
             responseData.message
                 ? alert(responseData.message)
-                : alert(`${responseData.userId}님, 반갑습니다.`);
+                : alert(`${responseData.userNickname}님, 반갑습니다.`);
 
             if (!response.ok) {
                 throw new Error(responseData.message);
@@ -128,6 +128,7 @@ function Login() {
             setUserState({
                 isLoggedIn: true,
                 userId: responseData.userId,
+                userNickname: responseData.userNickname,
                 token: responseData.token,
             });
 
@@ -136,6 +137,7 @@ function Login() {
                 "userData",
                 JSON.stringify({
                     userId: responseData.userId,
+                    userNickname: responseData.userNickname,
                     token: responseData.token,
                 })
             );

@@ -5,6 +5,7 @@ export const AuthLogin = atom({
     default: {
         isLoggedIn: false,
         userId: "",
+        userNickname: "",
         token: "",
     },
 });
