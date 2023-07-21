@@ -8,8 +8,8 @@ function Router() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="users/login" element={<Login />} />
-                <Route path="users/signup" element={<Signup />} />
+                <Route path="auth/login" element={<Login />} />
+                <Route path="auth/signup" element={<Signup />} />
                 <Route path="/:uid" element={<Main />} />
                 <Route path="/" element={<PageReturn />} />
             </Routes>

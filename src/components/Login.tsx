@@ -103,7 +103,7 @@ function Login() {
         // setValue("user_password", "");
         try {
             setIsLoaging(true);
-            const response = await fetch("http://localhost:8080/users/login", {
+            const response = await fetch("http://localhost:8080/auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -190,7 +190,7 @@ function Login() {
                         {/* <LoginWarning>{loginError}</LoginWarning> */}
                     </GridLoginStyle>
                 </form>
-                <Link to={"/users/signup"}>SIGN UP</Link>
+                <Link to={"/auth/signup"}>SIGN UP</Link>
             </Container>
         </>
     );

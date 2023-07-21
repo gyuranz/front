@@ -80,7 +80,7 @@ function Signup() {
     const navigate = useNavigate();
 
     const goLogin = () => {
-        navigate("/users/login");
+        navigate("/auth/login");
     };
 
     const [loginError, setLoginError] = useState("");
@@ -112,7 +112,7 @@ function Signup() {
         // setError("extraError", { message: "Server offline." });
         try {
             setIsLoaging(true);
-            const response = await fetch("/users/signup", {
+            const response = await fetch("http://localhost:8080/auth/signup", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
