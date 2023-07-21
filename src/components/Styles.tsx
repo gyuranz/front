@@ -21,3 +21,7 @@ export const containerStyle = css`
 export const mainBgColor = css`
     background-color: #00d2d3;
 `;
+
+export const reverseColor = css`
+    background-color: #fe3411;
+`;
