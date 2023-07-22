@@ -2,10 +2,17 @@ import { motion } from "framer-motion";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import styled from "styled-components";
-import { buttonStyle, containerStyle, mainBgColor } from "./Styles";
+import {
+    boxVariants,
+    buttonStyle,
+    containerStyle,
+    inputVariants,
+    mainBgColor,
+} from "./Styles";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { AuthAtom, AuthLogin } from "../atoms";
+import { MY_URL } from "../App";
 
 const Container = styled(motion.div)`
     ${containerStyle}
@@ -40,32 +47,6 @@ const LoginWarning = styled.span`
     color: red;
     font-size: 14px;
 `;
-
-const boxVariants = {
-    start: { opacity: 0, scale: 0.5 },
-    end: {
-        opacity: 1,
-        scale: 1,
-        transition: {
-            type: "spring",
-            duration: 2,
-            bounce: 0.65,
-            delayChildren: 0.3,
-            staggerChildren: 0.1,
-        },
-    },
-};
-
-const inputVariants = {
-    start: {
-        opacity: 0,
-        y: 100,
-    },
-    end: {
-        opacity: 1,
-        y: 0,
-    },
-};
 
 interface IForm {
     user_id: string;
@@ -113,7 +94,7 @@ function Signup() {
         // setError("extraError", { message: "Server offline." });
         try {
             setIsLoading(true);
-            const response = await fetch("http://localhost:8080/auth/signup", {
+            const response = await fetch(`${MY_URL}auth/signup`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

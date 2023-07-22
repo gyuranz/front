@@ -1,48 +1,47 @@
 import { styled } from "styled-components";
-import { buttonStyle, containerStyle, reverseColor } from "./Styles";
 import {
-    faMicrophone,
-    faMicrophoneSlash,
-    faVolumeHigh,
-    faVolumeLow,
-    faVolumeXmark,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+    Tab,
+    Tabs,
+    VerticalLine,
+    buttonStyle,
+    containerStyle,
+    containerVariants,
+    reverseColor,
+} from "./Styles";
+
 import { useRecoilState } from "recoil";
 import { AuthLogin, MicCondition, VolumeContidion } from "../atoms";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link, Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
+import { MY_URL } from "../App";
 
-const BaseContainer = styled.div`
-    /* ${containerStyle} */
+const BaseContainer = styled(motion.div)`
+    ${containerStyle}
     width: 95vw;
     height: 90vh;
     display: grid;
-    grid-template-columns: 3.5fr 1.5fr;
+    grid-template-columns: 3.5fr 1fr 1.5fr;
 `;
 
 const MainContainer = styled.div`
     ${containerStyle}
+    background-color: transparent;
+    box-shadow: none;
     width: 66.5vw;
     height: 90vh;
     position: relative;
+    border-radius: 30px 0 0 30px;
 `;
 
-const RoomList = styled.div`
+const RoomList = styled(motion.div)`
     ${containerStyle}
+    background-color: transparent;
+    box-shadow: none;
     width: 28.5vw;
     height: 90vh;
     display: block;
-`;
-
-const IOButton = styled.button`
-    border: none;
-    background-color: transparent;
-    position: absolute;
-    top: 10px;
-    left: 130px;
-    padding: 10px;
+    border-radius: 0 30px 30px 0;
 `;
 
 const LogoutButton = styled(motion.div)`
@@ -50,13 +49,11 @@ const LogoutButton = styled(motion.div)`
     ${reverseColor}
     z-index: 999;
     position: absolute;
-    top: 3rem;
+    top: 5vh;
     cursor: pointer;
 `;
 
 function Main() {
-    const [mic, setMic] = useRecoilState(MicCondition);
-    const [volume, setVolume] = useRecoilState(VolumeContidion);
     const { uid } = useParams();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
@@ -65,13 +62,6 @@ function Main() {
     const [userState, setUserState] = useRecoilState(AuthLogin);
     // const authFunc = useRecoilValue(AuthAtom);
     // console.log(authFunc);
-
-    const volumeControl = () => {
-        setVolume((prev) => !prev);
-    };
-    const micControl = () => {
-        setMic((prev) => !prev);
-    };
 
     const LogoutHandler = () => {
         localStorage.removeItem("userData");
@@ -86,17 +76,17 @@ function Main() {
     };
 
     useEffect(() => {
-        // if (storedData && uid === storedData.userId) {
-        //     console.log("hello, you are right user");
-        // } else {
-        //     navigate("/auth/login");
-        // }
+        if (storedData && uid === storedData.userId) {
+            console.log("hello, you are right user");
+        } else {
+            navigate("/auth/login");
+        }
 
         const sendRequest = async () => {
             try {
                 if (storedData) {
                     const response = await fetch(
-                        `http://localhost:8080/${storedData.userId}`,
+                        `${MY_URL}${storedData.userId}`,
                         {
                             method: "GET",
                             headers: {
@@ -113,6 +103,7 @@ function Main() {
                     }
 
                     // console.log(responseData.user);
+
                     setLoadedUsers(responseData.user.user_joined_room_list);
                     setUserState({
                         ...userState,
@@ -126,7 +117,7 @@ function Main() {
                     // console.log(userState);
                     // console.log(loadedUsers);
                 } else {
-                    // navigate("/auth/login");
+                    navigate("/auth/login");
                 }
             } catch (err) {
                 console.log(err);
@@ -136,32 +127,39 @@ function Main() {
     }, []);
 
     // console.log(userState);
-    console.log(loadedUsers);
+    // console.log(loadedUsers);
     return (
         <>
             <LogoutButton onClick={LogoutHandler}>LOG OUT</LogoutButton>
-            <BaseContainer>
+            <BaseContainer
+                variants={containerVariants}
+                initial="start"
+                animate="end"
+            >
                 <MainContainer>
                     <h1>{storedData && storedData.userNickname}</h1>
-                    <IOButton onClick={volumeControl}>
-                        {volume ? (
-                            <FontAwesomeIcon icon={faVolumeHigh} />
-                        ) : (
-                            <FontAwesomeIcon icon={faVolumeXmark} />
-                        )}
-                    </IOButton>
-                    <IOButton onClick={micControl} style={{ left: "170px" }}>
-                        {mic ? (
-                            <FontAwesomeIcon icon={faMicrophone} />
-                        ) : (
-                            <FontAwesomeIcon icon={faMicrophoneSlash} />
-                        )}
-                    </IOButton>
                 </MainContainer>
+                <VerticalLine />
+
                 <RoomList>
-                    {loadedUsers.map((room, index) => (
-                        <div key={index}>{room}</div>
-                    ))}
+                    <Tabs>
+                        <Tab isActive={true}>
+                            <Link to={"finished"}>FINISHED</Link>
+                        </Tab>
+                        <VerticalLine />
+                        <Tab isActive={false}>
+                            <Link to={"join"}>JOIN</Link>
+                        </Tab>
+                        <VerticalLine />
+                        <Tab
+                            style={{ borderRadius: "0 30px 0 0" }}
+                            isActive={false}
+                        >
+                            <Link to={"create"}>CREATE</Link>
+                        </Tab>
+                    </Tabs>
+
+                    <Outlet />
                 </RoomList>
             </BaseContainer>
         </>

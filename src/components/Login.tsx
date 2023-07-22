@@ -2,12 +2,19 @@ import { motion } from "framer-motion";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import styled from "styled-components";
-import { buttonStyle, containerStyle, mainBgColor } from "./Styles";
+import {
+    boxVariants,
+    buttonStyle,
+    containerStyle,
+    inputVariants,
+    mainBgColor,
+} from "./Styles";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useRecoilState, useRecoilValue } from "recoil";
 import { AuthAtom, AuthLogin } from "../atoms";
 import { useHttpClient } from "../hooks/http-hook";
+import { MY_URL } from "../App";
 
 const Container = styled(motion.div)`
     ${containerStyle}
@@ -50,32 +57,6 @@ const LoginWarning = styled.span`
     font-size: 14px;
 `;
 
-const boxVariants = {
-    start: { opacity: 0, scale: 0.5 },
-    end: {
-        opacity: 1,
-        scale: 1,
-        transition: {
-            type: "spring",
-            duration: 2,
-            bounce: 0.65,
-            delayChildren: 0.3,
-            staggerChildren: 0.1,
-        },
-    },
-};
-
-const inputVariants = {
-    start: {
-        opacity: 0,
-        y: 100,
-    },
-    end: {
-        opacity: 1,
-        y: 0,
-    },
-};
-
 interface ILoginForm {
     user_id: string;
     user_password: string;
@@ -86,6 +67,7 @@ interface ILoginForm {
 function Login() {
     const navigate = useNavigate();
 
+    const [loginError, setLoginError] = useState("");
     const [isLoading, setIsLoaging] = useState(false);
     // const authFunc = useRecoilValue(AuthAtom);
     const [userState, setUserState] = useRecoilState(AuthLogin);
@@ -105,7 +87,7 @@ function Login() {
         // setValue("user_password", "");
         try {
             setIsLoaging(true);
-            const response = await fetch("http://localhost:8080/auth/login", {
+            const response = await fetch(`${MY_URL}auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -119,6 +101,7 @@ function Login() {
             const responseData = await response.json();
 
             setIsLoaging(false);
+            setLoginError(responseData.message);
             // responseData.message
             //     ? alert(responseData.message)
             //     : alert(`${responseData.userNickname}님, 반갑습니다.`);
@@ -153,6 +136,7 @@ function Login() {
 
     return (
         <>
+            <LoginWarning>{loginError}</LoginWarning>
             <Container variants={boxVariants} initial="start" animate="end">
                 <form onSubmit={handleSubmit(onValid)}>
                     <GridLoginStyle>
@@ -175,7 +159,7 @@ function Login() {
                                 {...register("user_password", {
                                     required: "Password is Required",
                                     minLength: {
-                                        value: 8,
+                                        value: 6,
                                         message: "Your password is too short",
                                     },
                                 })}
