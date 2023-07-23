@@ -14,7 +14,7 @@ import {
     reverseColor,
     reverseTextColor,
 } from "../Styles";
-import { Outlet, useNavigate, Link } from "react-router-dom";
+import { Outlet, useNavigate, Link, useParams } from "react-router-dom";
 import {
     faMicrophone,
     faMicrophoneSlash,
@@ -133,12 +133,6 @@ const RoomOutButton = styled(motion.div)`
 `;
 
 //! 룸 나가기를 하면 userState의 current room 을 {}로 설정
-const fakeCurrentRoom = {
-    room_id: "123321",
-    room_name: "세젤예 손예진",
-    room_summary: "현빈의 영원의 짝꿍 손예진에 대한 설명입니다.",
-    room_password: "",
-};
 
 function Room() {
     const [roomText, setRoomText] = useState<any>([]);
@@ -176,17 +170,24 @@ function Room() {
         });
 
         console.log(userState);
-        navigate(`/room/${userState.userId}`);
+        navigate(`/${userState.userId}`);
     };
-
+    // console.log(userState);
+    const a = useParams();
+    // console.log(a.room_id);
+    const room = userState.userJoinedRoomList.filter(
+        (abc: any) => abc.room_id === a.room_id
+    );
+    // console.log(room[0]);
     useEffect(() => {
         setUserState({
             ...userState,
-            currentRoom: fakeCurrentRoom,
+            currentRoom: room[0],
         });
 
         //로딩 될때만 실행
     }, []);
+    console.log(userState);
 
     useEffect(() => {
         const {
@@ -235,9 +236,9 @@ function Room() {
             text,
             user_nickname: userState.userNickname,
         });
-        console.log(userState);
+        // console.log(userState);
     };
-    console.log(roomText);
+    // console.log(roomText);
 
     return (
         <>
