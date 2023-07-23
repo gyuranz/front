@@ -1,43 +1,45 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback } from "react";
+import { createSpeechlySpeechRecognition } from "@speechly/speech-recognition-polyfill";
 import SpeechRecognition, {
     useSpeechRecognition,
 } from "react-speech-recognition";
 
+// const appId = "daein7076@gmail.com";
+// const SpeechlySpeechRecognition = createSpeechlySpeechRecognition(appId);
+// SpeechRecognition.applyPolyfill(SpeechlySpeechRecognition);
+
 const Dictaphone = () => {
-    const [text, setText] = useState([]) as any;
     const {
         transcript,
         listening,
-        resetTranscript,
         browserSupportsSpeechRecognition,
+        resetTranscript,
     } = useSpeechRecognition();
-    const onClick = () => {
+    const startListening = () =>
         SpeechRecognition.startListening({ continuous: true });
-    };
-
-    // useEffect(() => {
-    //     SpeechRecognition.startListening({ continuous: true });
-    //     const twoSecond = setInterval(() => {
-    //         setText((prev: string[]) => [...prev, transcript]);
-    //         resetTranscript();
-    //     }, 2000);
-    //     return () => {
-    //         // clearInterval()
-    //     };
-    // }, []);
-    // console.log(text);
 
     if (!browserSupportsSpeechRecognition) {
         return <span>Browser doesn't support speech recognition.</span>;
     }
 
+    const onMouseUp = () => {
+        console.log(transcript);
+        SpeechRecognition.stopListening();
+        resetTranscript();
+    };
+
     return (
         <div>
             <p>Microphone: {listening ? "on" : "off"}</p>
-            <button onClick={onClick}>Start</button>
-            <button onClick={SpeechRecognition.stopListening}>Stop</button>
-            <button onClick={resetTranscript}>Reset</button>
-            <p>{transcript}</p>
+            <button
+                onTouchStart={startListening}
+                onMouseDown={startListening}
+                onTouchEnd={SpeechRecognition.stopListening}
+                onMouseUp={onMouseUp}
+            >
+                Hold to talk
+            </button>
+            {/* <p>{transcript}</p> */}
         </div>
     );
 };

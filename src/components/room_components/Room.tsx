@@ -10,6 +10,7 @@ import {
     buttonStyle,
     containerStyle,
     containerVariants,
+    mainBgColor,
     reverseColor,
     reverseTextColor,
 } from "../Styles";
@@ -23,6 +24,41 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Dictaphone from "./Playground";
+import { useForm } from "react-hook-form";
+import { MY_URL } from "../../App";
+
+const InputTextStyle = styled.div`
+    display: grid;
+    grid-template-columns: 4fr 1fr;
+`;
+
+const TextInput = styled(motion.input)`
+    ${buttonStyle}
+    width: 23.5vw;
+    height: 8vh;
+    border-radius: 0;
+`;
+
+const TextInputButton = styled(motion.button)`
+    ${buttonStyle}
+    ${mainBgColor}
+    border-radius: 0 0 30px 0;
+    width: 5vw;
+    height: 8vh;
+    cursor: pointer;
+    color: white;
+`;
+
+const ChatArea = styled.div`
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 100%;
+    height: 82vh;
+`;
+
+interface ITextForm {
+    text: string;
+    text_time: number;
+}
 
 const BaseContainer = styled(motion.div)`
     ${containerStyle}
@@ -39,9 +75,10 @@ const MainContainer = styled.div`
     width: 66.5vw;
     height: 90vh;
     /* position: relative; */
-    display: flex;
-    justify-content: baseline;
-    align-items: flex-start;
+    /* display: flex; */
+    /* align-items: flex-start; */
+    /* justify-content: baseline; */
+    display: block;
     border-radius: 30px 0 0 30px;
 `;
 
@@ -105,8 +142,14 @@ function Room() {
         setMic((prev) => !prev);
     };
 
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        setValue,
+    } = useForm<ITextForm>();
+
     const RoomOutHandler = () => {
-        // useEffect(() => {
         setUserState({
             ...userState,
             currentRoom: {
@@ -115,7 +158,7 @@ function Room() {
                 room_summary: "",
             },
         });
-        // });
+
         console.log(userState);
         navigate(`/${userState.userId}`);
     };
@@ -126,6 +169,29 @@ function Room() {
             currentRoom: fakeCurrentRoom,
         });
     }, []);
+
+    const onValid = async ({ text, text_time }: ITextForm) => {
+        try {
+            const response = await fetch(`${MY_URL}auth/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: " Bearer " + userState.token,
+                },
+                body: JSON.stringify({
+                    text,
+                    text_time,
+                }),
+            });
+            const responseData = await response.json();
+
+            if (!response.ok) {
+                throw new Error(responseData.message);
+            }
+        } catch (err) {
+            console.log(err);
+        }
+    };
 
     return (
         <>
@@ -173,11 +239,30 @@ function Room() {
                     </Tabs>
 
                     <Outlet />
+
                     <Dictaphone />
                 </MainContainer>
                 <VerticalLine />
 
-                <RoomList></RoomList>
+                <RoomList>
+                    <ChatArea></ChatArea>
+
+                    <form onSubmit={handleSubmit(onValid)}>
+                        <InputTextStyle>
+                            <div>
+                                <TextInput
+                                    type="text"
+                                    {...register("text", {
+                                        required: true,
+                                    })}
+                                    placeholder="INPUT TEXT"
+                                />
+                            </div>
+
+                            <TextInputButton>SEND</TextInputButton>
+                        </InputTextStyle>
+                    </form>
+                </RoomList>
             </BaseContainer>
         </>
     );
