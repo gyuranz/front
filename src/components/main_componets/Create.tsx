@@ -53,17 +53,20 @@ function Create() {
 
     const onValid = async (room: IRoomForm) => {
         try {
-            const response = await fetch(`${MY_URL}create`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: " Bearer " + userState.token,
-                },
-                body: JSON.stringify({
-                    room_name: room.room_name,
-                    room_password: room.room_password,
-                }),
-            });
+            const response = await fetch(
+                `${MY_URL}${userState.userId}/create`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: " Bearer " + userState.token,
+                    },
+                    body: JSON.stringify({
+                        room_name: room.room_name,
+                        room_password: room.room_password,
+                    }),
+                }
+            );
             const responseData = await response.json();
 
             if (!response.ok) {
@@ -81,7 +84,7 @@ function Create() {
                 },
             });
 
-            navigate(`/${room_id}`);
+            navigate(`/room/${room_id}`);
         } catch (err) {
             console.log(err);
         }
@@ -127,7 +130,7 @@ function Create() {
                     {errors?.room_password?.message as string}
                 </LoginWarning>
 
-                <RoomJoinButton variants={inputVariants}>JOIN</RoomJoinButton>
+                <RoomJoinButton variants={inputVariants}>CREATE</RoomJoinButton>
                 {/* <LoginWarning>{loginError}</LoginWarning> */}
             </form>
         </>

@@ -53,7 +53,7 @@ function Join() {
 
     const onValid = async (room: IRoomForm) => {
         try {
-            const response = await fetch(`${MY_URL}join`, {
+            const response = await fetch(`${MY_URL}${userState.userId}/join`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -81,7 +81,7 @@ function Join() {
                 },
             });
 
-            navigate(`/${room_id}`);
+            navigate(`/room/${room_id}`);
         } catch (err) {
             console.log(err);
         }
