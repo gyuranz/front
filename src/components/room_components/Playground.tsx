@@ -39,7 +39,7 @@ const Dictaphone = () => {
             >
                 Hold to talk
             </button>
-            {/* <p>{transcript}</p> */}
+            <p>{transcript}</p>
         </div>
     );
 };

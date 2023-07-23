@@ -47,6 +47,8 @@ const RoomList = styled(motion.div)`
 const LogoutButton = styled(motion.div)`
     ${buttonStyle}
     ${reverseColor}
+    font-size: 1rem;
+    color: white;
     z-index: 999;
     position: absolute;
     top: 5vh;

@@ -137,6 +137,7 @@ const fakeCurrentRoom = {
     room_id: "123321",
     room_name: "세젤예 손예진",
     room_summary: "현빈의 영원의 짝꿍 손예진에 대한 설명입니다.",
+    room_password: "",
 };
 
 function Room() {
@@ -170,6 +171,7 @@ function Room() {
                 room_id: "",
                 room_name: "",
                 room_summary: "",
+                room_password: "",
             },
         });
 
