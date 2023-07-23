@@ -32,7 +32,7 @@ function Finished({ userData }: any) {
         // response로 룸 클릭한 룸 정보를 받아옴
         //! 그 정보를 기준으로 userState에 current room을 설정
 
-        navigate(`/${userId}/${e.target.id}`);
+        navigate(`/room/${e.target.id}`);
     };
 
     // console.log(userState.userJoinedRoomList);

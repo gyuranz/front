@@ -17,7 +17,7 @@ function Router() {
                     <Route path="join" element={<Join />} />
                     <Route path="create" element={<Create />} />
                 </Route>
-                <Route path="/:user_id/:room_id" element={<Room />}>
+                <Route path="/room/:room_id" element={<Room />}>
                     <Route path="playground" />
                     <Route path="summary" />
                     <Route path="question" />

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRecoilState } from "recoil";
 import { AuthLogin, MicCondition, VolumeContidion } from "../../atoms";
 import { motion } from "framer-motion";
@@ -26,6 +26,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Dictaphone from "./Playground";
 import { useForm } from "react-hook-form";
 import { MY_URL } from "../../App";
+import { io } from "socket.io-client";
+
+let socket: any;
+
+const Container = styled.div`
+    background-color: rgba(0, 0, 0, 0.5);
+    height: 80vh;
+`;
 
 const InputTextStyle = styled.div`
     display: grid;
@@ -35,16 +43,19 @@ const InputTextStyle = styled.div`
 const TextInput = styled(motion.input)`
     ${buttonStyle}
     width: 23.5vw;
-    height: 8vh;
+    height: 6vh;
     border-radius: 0;
+    font-size: 1.2rem;
 `;
 
 const TextInputButton = styled(motion.button)`
     ${buttonStyle}
     ${mainBgColor}
     border-radius: 0 0 30px 0;
+    font-size: 1.2rem;
+    /* line-height: 1.2rem; */
     width: 5vw;
-    height: 8vh;
+    height: 6vh;
     cursor: pointer;
     color: white;
 `;
@@ -52,7 +63,8 @@ const TextInputButton = styled(motion.button)`
 const ChatArea = styled.div`
     background-color: rgba(0, 0, 0, 0.5);
     width: 100%;
-    height: 82vh;
+    height: 80vh;
+    margin-top: 4vh;
 `;
 
 interface ITextForm {
@@ -128,12 +140,14 @@ const fakeCurrentRoom = {
 };
 
 function Room() {
+    const [roomText, setRoomText] = useState<any>([]);
     const [mic, setMic] = useRecoilState(MicCondition);
     const [volume, setVolume] = useRecoilState(VolumeContidion);
     const navigate = useNavigate();
     const [userState, setUserState] = useRecoilState(AuthLogin);
-    console.log(userState);
-    console.log(fakeCurrentRoom);
+
+    // console.log(userState);
+    // console.log(fakeCurrentRoom);
 
     const volumeControl = () => {
         setVolume((prev) => !prev);
@@ -160,7 +174,7 @@ function Room() {
         });
 
         console.log(userState);
-        navigate(`/${userState.userId}`);
+        navigate(`/room/${userState.userId}`);
     };
 
     useEffect(() => {
@@ -168,30 +182,60 @@ function Room() {
             ...userState,
             currentRoom: fakeCurrentRoom,
         });
+
+        //로딩 될때만 실행
+    }, []);
+
+    useEffect(() => {
+        const {
+            userId,
+            currentRoom: { room_id },
+        } = userState;
+        // ! MY_URL 혹은 ${MY_URL}${userId}/${room_id} 일듯
+        socket = io(`${MY_URL}`, {
+            path: `/room/${room_id}`,
+        });
+        socket.emit("join", { userId, room_id }, (error: any) => {
+            error && alert(error);
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+    }, [MY_URL, userState]);
+
+    // const setabc = (text: string) => {
+    //     setRoomText([
+    //         ...roomText,
+    //         {
+    //             user_nickname: userState.userNickname,
+    //             chat: text,
+    //         },
+    //     ]);
+    // };
+
+    const onNewMessage = (newMessage: any) => {
+        setRoomText((prevRoomText: any) => [...prevRoomText, newMessage]);
+    };
+
+    // socket.on("sendMessage", setabc);
+
+    useEffect(() => {
+        socket.on("newMessage", onNewMessage);
+        return () => socket.off("newMessage", onNewMessage);
     }, []);
 
     const onValid = async ({ text, text_time }: ITextForm) => {
-        try {
-            const response = await fetch(`${MY_URL}auth/login`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: " Bearer " + userState.token,
-                },
-                body: JSON.stringify({
-                    text,
-                    text_time,
-                }),
-            });
-            const responseData = await response.json();
-
-            if (!response.ok) {
-                throw new Error(responseData.message);
-            }
-        } catch (err) {
-            console.log(err);
-        }
+        setValue("text", "");
+        // setabc(text);
+        // socket.emit("sendMessage", text, setabc);
+        socket.emit("sendMessage", {
+            text,
+            user_nickname: userState.userNickname,
+        });
+        console.log(userState);
     };
+    console.log(roomText);
 
     return (
         <>
@@ -217,7 +261,7 @@ function Room() {
                         )}
                     </IOButton>
 
-                    <Tabs>
+                    <Tabs style={{ margin: "0" }}>
                         <Tab
                             isActive={true}
                             style={{ borderRadius: "30px 0 0 0" }}
@@ -239,13 +283,23 @@ function Room() {
                     </Tabs>
 
                     <Outlet />
+                    <Container>hello</Container>
 
-                    <Dictaphone />
+                    {/* <Dictaphone /> */}
                 </MainContainer>
                 <VerticalLine />
 
                 <RoomList>
-                    <ChatArea></ChatArea>
+                    <ChatArea>
+                        {roomText?.map((roomText: any, index: any) => (
+                            <div key={index}>
+                                <span style={{ paddingRight: "10px" }}>
+                                    {roomText?.user_nickname}:
+                                </span>
+                                <span>{roomText?.chat}</span>
+                            </div>
+                        ))}
+                    </ChatArea>
 
                     <form onSubmit={handleSubmit(onValid)}>
                         <InputTextStyle>
