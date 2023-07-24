@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRecoilState } from "recoil";
 import { AuthLogin, MicCondition, VolumeContidion } from "../../atoms";
 import { motion } from "framer-motion";
@@ -132,17 +132,48 @@ const RoomOutButton = styled(motion.div)`
     transition: all 0.3s ease-in-out;
 `;
 
-//! 룸 나가기를 하면 userState의 current room 을 {}로 설정
+const Video = styled.video`
+    max-width: 100%;
+    max-height: 100%;
+`;
 
+//! 룸 나가기를 하면 userState의 current room 을 {}로 설정
+let stream;
 function Room() {
     const [roomText, setRoomText] = useState<any>([]);
     const [mic, setMic] = useRecoilState(MicCondition);
     const [volume, setVolume] = useRecoilState(VolumeContidion);
     const navigate = useNavigate();
     const [userState, setUserState] = useRecoilState(AuthLogin);
+    const [sharing, setSharing] = useState(false);
 
     // console.log(userState);
     // console.log(fakeCurrentRoom);
+
+    //!
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+    const shareScreen = async () => {
+        if (navigator.mediaDevices.getDisplayMedia) {
+            stream = await navigator.mediaDevices.getDisplayMedia({
+                audio: true,
+                video: {
+                    cursor: "always",
+                } as any,
+                // video: true,
+            });
+
+            console.log("stream", stream);
+            // videoRef.current?.srcObject = stream;
+            if (videoRef.current) videoRef.current.srcObject = stream;
+        }
+    };
+    const stopShareScreen = () => {
+        let tracks = videoRef.current?.srcObject?.getTracks() as any;
+        tracks.forEach((t: any) => t.stop());
+        if (videoRef.current) videoRef.current.srcObject = null;
+    };
+
+    //!
 
     const volumeControl = () => {
         setVolume((prev) => !prev);
@@ -198,6 +229,7 @@ function Room() {
         socket = io(`${MY_URL}`, {
             path: `/room/${room_id}`,
         });
+        socket = io(`${MY_URL}`);
         socket.emit("join", { userId, room_id }, (error: any) => {
             error && alert(error);
         });
@@ -286,7 +318,19 @@ function Room() {
                     </Tabs>
 
                     <Outlet />
-                    <Container>hello</Container>
+                    <Container>
+                        <button
+                            onClick={() => {
+                                shareScreen();
+                                // setSharing((prev) => !prev);
+                            }}
+                        >
+                            play
+                        </button>
+                        <button onClick={stopShareScreen}>stop</button>
+
+                        <Video ref={videoRef} autoPlay />
+                    </Container>
 
                     {/* <Dictaphone /> */}
                 </MainContainer>

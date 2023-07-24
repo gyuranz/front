@@ -15,6 +15,9 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link, Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
 import { MY_URL } from "../App";
+import { io } from "socket.io-client";
+
+let socket: any;
 
 const BaseContainer = styled(motion.div)`
     ${containerStyle}
@@ -76,10 +79,16 @@ function Main() {
         console.log(userState);
         navigate("/auth/login");
     };
+    // socket = io(`${MY_URL}`);
+    // socket.emit("connection", "abc");
+    // socket.on("newMessage", (data) => {
+    //     console.log(data);
+    // });
 
     useEffect(() => {
         if (storedData && uid === storedData.userId) {
             console.log("hello, you are right user");
+            console.log(userState.userJoinedRoomList);
         } else {
             navigate("/auth/login");
         }
