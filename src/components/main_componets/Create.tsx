@@ -54,7 +54,7 @@ function Create() {
     const onValid = async (room: IRoomForm) => {
         try {
             const response = await fetch(
-                `${MY_URL}${userState.userId}/create`,
+                `${MY_URL}/${userState.userId}/create`,
                 {
                     method: "POST",
                     headers: {

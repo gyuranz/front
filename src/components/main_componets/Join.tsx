@@ -53,7 +53,7 @@ function Join() {
 
     const onValid = async (room: IRoomForm) => {
         try {
-            const response = await fetch(`${MY_URL}${userState.userId}/join`, {
+            const response = await fetch(`${MY_URL}/${userState.userId}/join`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

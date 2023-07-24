@@ -94,7 +94,7 @@ function Signup() {
         // setError("extraError", { message: "Server offline." });
         try {
             setIsLoading(true);
-            const response = await fetch(`${MY_URL}auth/signup`, {
+            const response = await fetch(`${MY_URL}/auth/signup`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -175,7 +175,7 @@ function Signup() {
                             //             : true,
                             // },
                             minLength: {
-                                value: 3,
+                                value: 2,
                                 message: "Nickname is at least 3length",
                             },
                         })}

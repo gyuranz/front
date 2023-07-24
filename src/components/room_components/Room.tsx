@@ -29,7 +29,7 @@ import Dictaphone from "./Playground";
 import { useForm } from "react-hook-form";
 import classNames from "classnames";
 
-const socket = io(`http://localhost:8080/room`);
+const socket = io(`${MY_URL}:8080/room`);
 
 const Container = styled.div`
     background-color: rgba(0, 0, 0, 0.5);
@@ -144,6 +144,10 @@ const Message = styled.span`
 const Video = styled.video`
     max-width: 100%;
     max-height: 100%;
+`;
+
+const ChattingBox = styled(motion.div)`
+    margin: 30px;
 `;
 
 //! 룸 나가기를 하면 userState의 current room 을 {}로 설정
@@ -415,7 +419,7 @@ function Room() {
                     </form> */}
                     <ChatArea ref={chatContainerEl}>
                         {chats.map((chat, index) => (
-                            <ChatArea
+                            <ChattingBox
                                 key={index}
                                 className={classNames({
                                     my_message: socket.id === chat.username,
@@ -432,7 +436,7 @@ function Room() {
                                 <Message className="message">
                                     {chat.message}
                                 </Message>
-                            </ChatArea>
+                            </ChattingBox>
                         ))}
                     </ChatArea>
                     <form onSubmit={onSendMessage}>

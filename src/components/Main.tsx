@@ -97,7 +97,7 @@ function Main() {
             try {
                 if (storedData) {
                     const response = await fetch(
-                        `${MY_URL}${storedData.userId}`,
+                        `${MY_URL}/${storedData.userId}`,
                         {
                             method: "GET",
                             headers: {

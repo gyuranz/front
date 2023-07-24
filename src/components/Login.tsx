@@ -87,7 +87,7 @@ function Login() {
         // setValue("user_password", "");
         try {
             setIsLoaging(true);
-            const response = await fetch(`${MY_URL}auth/login`, {
+            const response = await fetch(`${MY_URL}/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
