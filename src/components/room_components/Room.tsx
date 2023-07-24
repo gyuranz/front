@@ -30,8 +30,8 @@ import { useForm } from "react-hook-form";
 import classNames from "classnames";
 
 //! 소켓 api 꼭 같이 수정해주기
-const socket = io(`http://15.164.100.230:8080/room`);
-// const socket = io(`http://localhost:8080/room`);
+// const socket = io(`http://15.164.100.230:8080/room`);
+const socket = io(`http://localhost:8080/room`);
 
 const Container = styled.div`
     background-color: rgba(0, 0, 0, 0.5);
@@ -227,27 +227,27 @@ function Room() {
     // console.log(fakeCurrentRoom);
 
     //!
-    const videoRef = useRef<HTMLVideoElement | null>(null);
-    const shareScreen = async () => {
-        if (navigator.mediaDevices.getDisplayMedia) {
-            stream = await navigator.mediaDevices.getDisplayMedia({
-                audio: true,
-                video: {
-                    cursor: "always",
-                } as any,
-                // video: true,
-            });
+    // const videoRef = useRef<HTMLVideoElement | null>(null);
+    // const shareScreen = async () => {
+    //     if (navigator.mediaDevices.getDisplayMedia) {
+    //         stream = await navigator.mediaDevices.getDisplayMedia({
+    //             audio: true,
+    //             video: {
+    //                 cursor: "always",
+    //             } as any,
+    //             // video: true,
+    //         });
 
-            console.log("stream", stream);
-            // videoRef.current?.srcObject = stream;
-            if (videoRef.current) videoRef.current.srcObject = stream;
-        }
-    };
-    const stopShareScreen = () => {
-        // let tracks = videoRef.current?.srcObject?.getTracks() as any;
-        // tracks.forEach((t: any) => t.stop());
-        if (videoRef.current) videoRef.current.srcObject = null;
-    };
+    //         console.log("stream", stream);
+    //         // videoRef.current?.srcObject = stream;
+    //         if (videoRef.current) videoRef.current.srcObject = stream;
+    //     }
+    // };
+    // const stopShareScreen = () => {
+    //     // let tracks = videoRef.current?.srcObject?.getTracks() as any;
+    //     // tracks.forEach((t: any) => t.stop());
+    //     if (videoRef.current) videoRef.current.srcObject = null;
+    // };
 
     //!
 
@@ -376,7 +376,7 @@ function Room() {
 
                     <Outlet />
                     <Container>
-                        <button
+                        {/* <button
                             onClick={() => {
                                 shareScreen();
                                 // setSharing((prev) => !prev);
@@ -386,7 +386,8 @@ function Room() {
                         </button>
                         <button onClick={stopShareScreen}>stop</button>
 
-                        <Video ref={videoRef} autoPlay />
+
+                        <Video ref={videoRef} autoPlay /> */}
                     </Container>
 
                     {/* <Dictaphone /> */}
