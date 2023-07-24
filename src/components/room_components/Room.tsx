@@ -29,7 +29,8 @@ import Dictaphone from "./Playground";
 import { useForm } from "react-hook-form";
 import classNames from "classnames";
 
-const socket = io(`${MY_URL}:8080/room`);
+//! 소켓 api 꼭 같이 수정해주기
+const socket = io(`http://localhost:8080/room`);
 
 const Container = styled.div`
     background-color: rgba(0, 0, 0, 0.5);
@@ -193,6 +194,7 @@ function Room() {
     // }, [MY_URL, userState]);
 
     // message event listener
+
     useEffect(() => {
         const messageHandler = (chat) =>
             setChats((prevChats) => [...prevChats, chat]);
