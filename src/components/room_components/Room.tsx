@@ -1,4 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import { MY_URL } from "../../App";
+import { io } from "socket.io-client";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRecoilState } from "recoil";
 import { AuthLogin, MicCondition, VolumeContidion } from "../../atoms";
 import { motion } from "framer-motion";
@@ -25,10 +27,9 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Dictaphone from "./Playground";
 import { useForm } from "react-hook-form";
-import { MY_URL } from "../../App";
-import { io } from "socket.io-client";
+import classNames from "classnames";
 
-let socket: any;
+const socket = io(`http://localhost:8080/room`);
 
 const Container = styled.div`
     background-color: rgba(0, 0, 0, 0.5);
@@ -132,6 +133,14 @@ const RoomOutButton = styled(motion.div)`
     transition: all 0.3s ease-in-out;
 `;
 
+const Message = styled.span`
+    margin-bottom: 0.5rem;
+    background: #fff;
+    width: fit-content;
+    padding: 12px;
+    border-radius: 0.5rem;
+`;
+
 const Video = styled.video`
     max-width: 100%;
     max-height: 100%;
@@ -146,6 +155,66 @@ function Room() {
     const navigate = useNavigate();
     const [userState, setUserState] = useRecoilState(AuthLogin);
     const [sharing, setSharing] = useState(false);
+    const [chats, setChats] = useState([]);
+    const [message, setMessage] = useState("");
+    const chatContainerEl = useRef(null);
+    // 채팅이 길어지면(chats.length) 스크롤이 생성되므로, 스크롤의 위치를 최근 메시지에 위치시키기 위함
+    useEffect(() => {
+        if (!chatContainerEl.current) return;
+
+        const chatContainer = chatContainerEl.current;
+        const { scrollHeight, clientHeight } = chatContainer;
+
+        if (scrollHeight > clientHeight) {
+            chatContainer.scrollTop = scrollHeight - clientHeight;
+        }
+    }, [chats.length]);
+
+    // useEffect(() => {
+    //     const {
+    //         userId,
+    //         currentRoom: { room_id },
+    //     } = userState;
+    //     // ! MY_URL 혹은 ${MY_URL}${userId}/${room_id} 일듯
+    //     // socket = io(`${MY_URL}`, {
+    //     //     path: `/room/${room_id}`,
+    //     // });
+    //     socket.emit("join", { userId, room_id }, (error: any) => {
+    //         error && alert(error);
+    //     });
+
+    //     return () => {
+    //         socket.disconnect();
+    //     };
+    // }, [MY_URL, userState]);
+
+    // message event listener
+    useEffect(() => {
+        const messageHandler = (chat) =>
+            setChats((prevChats) => [...prevChats, chat]);
+        socket.on("message", messageHandler);
+
+        return () => {
+            socket.off("message", messageHandler);
+        };
+    }, []);
+
+    const onChange = useCallback((e) => {
+        setMessage(e.target.value);
+    }, []);
+
+    const onSendMessage = useCallback(
+        (e) => {
+            e.preventDefault();
+            if (!message) return alert("메시지를 입력해 주세요.");
+
+            socket.emit("message", message, (chat) => {
+                setChats((prevChats) => [...prevChats, chat]);
+                setMessage("");
+            });
+        },
+        [message]
+    );
 
     // console.log(userState);
     // console.log(fakeCurrentRoom);
@@ -168,8 +237,8 @@ function Room() {
         }
     };
     const stopShareScreen = () => {
-        let tracks = videoRef.current?.srcObject?.getTracks() as any;
-        tracks.forEach((t: any) => t.stop());
+        // let tracks = videoRef.current?.srcObject?.getTracks() as any;
+        // tracks.forEach((t: any) => t.stop());
         if (videoRef.current) videoRef.current.srcObject = null;
     };
 
@@ -220,25 +289,6 @@ function Room() {
     }, []);
     console.log(userState);
 
-    useEffect(() => {
-        const {
-            userId,
-            currentRoom: { room_id },
-        } = userState;
-        // ! MY_URL 혹은 ${MY_URL}${userId}/${room_id} 일듯
-        socket = io(`${MY_URL}`, {
-            path: `/room/${room_id}`,
-        });
-        socket = io(`${MY_URL}`);
-        socket.emit("join", { userId, room_id }, (error: any) => {
-            error && alert(error);
-        });
-
-        return () => {
-            socket.disconnect();
-        };
-    }, [MY_URL, userState]);
-
     // const setabc = (text: string) => {
     //     setRoomText([
     //         ...roomText,
@@ -255,10 +305,10 @@ function Room() {
 
     // socket.on("sendMessage", setabc);
 
-    useEffect(() => {
-        socket.on("newMessage", onNewMessage);
-        return () => socket.off("newMessage", onNewMessage);
-    }, []);
+    // useEffect(() => {
+    //     socket.on("newMessage", onNewMessage);
+    //     return () => socket.off("newMessage", onNewMessage);
+    // }, []);
 
     const onValid = async ({ text, text_time }: ITextForm) => {
         setValue("text", "");
@@ -337,7 +387,7 @@ function Room() {
                 <VerticalLine />
 
                 <RoomList>
-                    <ChatArea>
+                    {/* <ChatArea ref={chatContainerEl}>
                         {roomText?.map((roomText: any, index: any) => (
                             <div key={index}>
                                 <span style={{ paddingRight: "10px" }}>
@@ -361,6 +411,38 @@ function Room() {
                             </div>
 
                             <TextInputButton>SEND</TextInputButton>
+                        </InputTextStyle>
+                    </form> */}
+                    <ChatArea ref={chatContainerEl}>
+                        {chats.map((chat, index) => (
+                            <ChatArea
+                                key={index}
+                                className={classNames({
+                                    my_message: socket.id === chat.username,
+                                    alarm: !chat.username,
+                                })}
+                            >
+                                <span>
+                                    {chat.username
+                                        ? socket.id === chat.username
+                                            ? ""
+                                            : chat.username
+                                        : ""}
+                                </span>
+                                <Message className="message">
+                                    {chat.message}
+                                </Message>
+                            </ChatArea>
+                        ))}
+                    </ChatArea>
+                    <form onSubmit={onSendMessage}>
+                        <InputTextStyle>
+                            <TextInput
+                                type="text"
+                                onChange={onChange}
+                                value={message}
+                            />
+                            <TextInputButton>보내기</TextInputButton>
                         </InputTextStyle>
                     </form>
                 </RoomList>
