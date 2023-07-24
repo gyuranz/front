@@ -30,7 +30,8 @@ import { useForm } from "react-hook-form";
 import classNames from "classnames";
 
 //! 소켓 api 꼭 같이 수정해주기
-const socket = io(`http://15.146.100.230:8080/room`);
+const socket = io(`http://15.164.100.230:8080/room`);
+// const socket = io(`http://localhost:8080/room`);
 
 const Container = styled.div`
     background-color: rgba(0, 0, 0, 0.5);
