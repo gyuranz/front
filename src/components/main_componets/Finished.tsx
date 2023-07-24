@@ -5,7 +5,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { styled } from "styled-components";
 import { motion } from "framer-motion";
 import { buttonStyle, inputVariants, mainBgColor } from "../Styles";
-import { MY_URL } from "../../App";
 
 const Room = styled(motion.div)`
     ${buttonStyle}
