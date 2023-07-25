@@ -29,6 +29,26 @@ import Question from "./Question";
 import Summary from "./Summary";
 import Quiz from "./Quiz";
 
+//! STT
+const sampleRate = 16000;
+
+const getMediaStream = () =>
+    navigator.mediaDevices.getUserMedia({
+        audio: {
+            deviceId: "default",
+            sampleRate: sampleRate,
+            sampleSize: 16,
+            channelCount: 1,
+        },
+        video: false,
+    });
+
+interface WordRecognized {
+    isFinal: boolean;
+    text: string;
+}
+//! STT
+
 //! 소켓 api 꼭 같이 수정해주기
 // const socket = io(`http://15.164.100.230:8080/room`);
 const socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`, {
@@ -159,6 +179,121 @@ const Video = styled.video`
 
 let stream;
 function Room() {
+    // ! STT
+    const [connection, setConnection] = useState<any>();
+    const [currentRecognition, setCurrentRecognition] = useState<string>();
+    const [recognitionHistory, setRecognitionHistory] = useState<string[]>([]);
+    const [isRecording, setIsRecording] = useState<boolean>(false);
+    const [recorder, setRecorder] = useState<any>();
+    const processorRef = useRef<any>();
+    const audioContextRef = useRef<any>();
+    const audioInputRef = useRef<any>();
+
+    const [STTMessage, setSTTMessage] = useState<string[]>([]);
+
+    const speechRecognized = (data: WordRecognized) => {
+        if (data.isFinal) {
+            setCurrentRecognition("...");
+            setRecognitionHistory((old) => [data.text, ...old]);
+            setSTTMessage((prev) => [...prev, data.text]);
+        } else setCurrentRecognition(data.text + "...");
+    };
+
+    useEffect(() => {
+        console.log("\n\nrecognitionHistory", recognitionHistory);
+    }, [recognitionHistory]);
+
+    const connect = () => {
+        connection?.disconnect();
+        // const socket = io.connect("http://localhost:8081");
+        socket.on("connect", () => {
+            console.log("connected", socket.id);
+            setConnection(socket);
+        });
+
+        socket.emit("send_message", "hello world");
+
+        socket.emit("startGoogleCloudStream");
+
+        socket.on("receive_message", (data) => {
+            console.log("received message", data);
+        });
+
+        socket.on("receive_audio_text", (data) => {
+            speechRecognized(data);
+            // console.log("received audio text", data);
+        });
+
+        socket.on("disconnect", () => {
+            console.log("disconnected", socket.id);
+        });
+    };
+
+    const disconnect = () => {
+        if (!connection) return;
+        connection?.emit("endGoogleCloudStream");
+        connection?.disconnect();
+        processorRef.current?.disconnect();
+        audioInputRef.current?.disconnect();
+        audioContextRef.current?.close();
+        setConnection(undefined);
+        setRecorder(undefined);
+        setIsRecording(false);
+    };
+
+    useEffect(() => {
+        (async () => {
+            if (connection) {
+                if (isRecording) {
+                    return;
+                }
+
+                const stream = await getMediaStream();
+
+                audioContextRef.current = new window.AudioContext();
+
+                await audioContextRef.current.audioWorklet.addModule(
+                    "/src/worklets/recorderWorkletProcessor.js"
+                );
+
+                audioContextRef.current.resume();
+
+                audioInputRef.current =
+                    audioContextRef.current.createMediaStreamSource(stream);
+
+                processorRef.current = new AudioWorkletNode(
+                    audioContextRef.current,
+                    "recorder.worklet"
+                );
+
+                processorRef.current.connect(
+                    audioContextRef.current.destination
+                );
+                audioContextRef.current.resume();
+
+                audioInputRef.current.connect(processorRef.current);
+
+                processorRef.current.port.onmessage = (event: any) => {
+                    const audioData = event.data;
+                    connection.emit("send_audio_data", { audio: audioData });
+                };
+                setIsRecording(true);
+            } else {
+                console.error("No connection");
+            }
+        })();
+        return () => {
+            if (isRecording) {
+                processorRef.current?.disconnect();
+                audioInputRef.current?.disconnect();
+                if (audioContextRef.current?.state !== "closed") {
+                    audioContextRef.current?.close();
+                }
+            }
+        };
+    }, [connection, isRecording, recorder]);
+    //! STT
+
     const navigate = useNavigate();
     const [mic, setMic] = useRecoilState(MicCondition);
     const [volume, setVolume] = useRecoilState(VolumeContidion);
@@ -299,6 +434,28 @@ function Room() {
                             <Route path="question" element={<Question />} />
                             <Route path="quiz" element={<Quiz />} />
                         </Routes>
+                        <button
+                            className={
+                                isRecording ? "btn-danger" : "btn-outline-light"
+                            }
+                            onClick={connect}
+                            disabled={isRecording}
+                        >
+                            Start
+                        </button>
+                        <button
+                            className="btn-outline-light"
+                            onClick={disconnect}
+                            disabled={!isRecording}
+                        >
+                            Stop
+                        </button>
+                        <div style={{ width: "100%", height: "70vh" }}>
+                            {STTMessage.map((message, idx) => (
+                                <p key={idx}>{message}</p>
+                            ))}
+                            <p>{currentRecognition}</p>
+                        </div>
                     </Container>
 
                     {/* <Dictaphone /> */}
