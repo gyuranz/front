@@ -25,11 +25,6 @@ function App() {
             <BrowserRouter>
                 <Suspense fallback={<div className="center">Loading...</div>}>
                     <Routes>
-                        {/* <Route path="/auth">
-                        <Route path="login" element={<Login />} />
-                        <Route path="signup" element={<Signup />} />
-                    </Route> */}
-
                         <Route path="auth/login" element={<Login />} />
                         <Route path="auth/signup" element={<Signup />} />
 

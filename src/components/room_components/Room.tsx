@@ -15,14 +15,7 @@ import {
     reverseColor,
     reverseTextColor,
 } from "../Styles";
-import {
-    Outlet,
-    useNavigate,
-    Link,
-    useParams,
-    Routes,
-    Route,
-} from "react-router-dom";
+import { useNavigate, Link, useParams, Routes, Route } from "react-router-dom";
 import {
     faMicrophone,
     faMicrophoneSlash,
@@ -31,17 +24,21 @@ import {
     faVolumeXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Dictaphone from "./Playground";
-import { useForm } from "react-hook-form";
-import classNames from "classnames";
+import Playground from "./Playground";
+import Question from "./Question";
+import Summary from "./Summary";
+import Quiz from "./Quiz";
 
 //! 소켓 api 꼭 같이 수정해주기
 // const socket = io(`http://15.164.100.230:8080/room`);
-const socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`);
+const socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`, {
+    query: { user: JSON.stringify("a") },
+});
 
 const Container = styled.div`
     /* background-color: rgba(0, 0, 0, 0.5); */
     height: 80vh;
+    padding: 10px;
 `;
 
 const InputTextStyle = styled.div`
@@ -160,18 +157,16 @@ const Video = styled.video`
     max-height: 100%;
 `;
 
-//! 룸 나가기를 하면 userState의 current room 을 {}로 설정
 let stream;
 function Room() {
-    const [roomText, setRoomText] = useState<any>([]);
+    const navigate = useNavigate();
     const [mic, setMic] = useRecoilState(MicCondition);
     const [volume, setVolume] = useRecoilState(VolumeContidion);
-    const navigate = useNavigate();
     const [userState, setUserState] = useRecoilState(AuthLogin);
     const [chats, setChats] = useState([]);
     const [message, setMessage] = useState("");
     const chatContainerEl = useRef(null);
-    // 채팅이 길어지면(chats.length) 스크롤이 생성되므로, 스크롤의 위치를 최근 메시지에 위치시키기 위함
+    //! 채팅이 길어지면(chats.length) 스크롤이 생성되므로, 스크롤의 위치를 최근 메시지에 위치시키기 위함
     useEffect(() => {
         if (!chatContainerEl.current) return;
 
@@ -183,27 +178,9 @@ function Room() {
         }
     }, [chats.length]);
 
-    // useEffect(() => {
-    //     const {
-    //         userId,
-    //         currentRoom: { room_id },
-    //     } = userState;
-    //     // ! MY_URL 혹은 ${MY_URL}${userId}/${room_id} 일듯
-    //     // socket = io(`${MY_URL}`, {
-    //     //     path: `/room/${room_id}`,
-    //     // });
-    //     socket.emit("join", { userId, room_id }, (error: any) => {
-    //         error && alert(error);
-    //     });
-
-    //     return () => {
-    //         socket.disconnect();
-    //     };
-    // }, [MY_URL, userState]);
-
-    // message event listener
-
+    //! message event listener
     useEffect(() => {
+        // const socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`);
         const messageHandler = (chat) =>
             setChats((prevChats) => [...prevChats, chat]);
         socket.on("message", messageHandler);
@@ -212,6 +189,7 @@ function Room() {
             socket.off("message", messageHandler);
         };
     }, []);
+    console.log(chats);
 
     const onChange = useCallback((e) => {
         setMessage(e.target.value);
@@ -223,12 +201,14 @@ function Room() {
             if (!message) return alert("메시지를 입력해 주세요.");
 
             socket.emit("message", message, (chat) => {
+                console.log(chat);
                 setChats((prevChats) => [...prevChats, chat]);
                 setMessage("");
             });
         },
         [message]
     );
+    //!
 
     const volumeControl = () => {
         setVolume((prev) => !prev);
@@ -236,14 +216,7 @@ function Room() {
     const micControl = () => {
         setMic((prev) => !prev);
     };
-
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        setValue,
-    } = useForm<ITextForm>();
-
+    //! 룸 나가기를 하면 userState의 current room 을 {}로 설정
     const RoomOutHandler = () => {
         setUserState({
             ...userState,
@@ -255,14 +228,15 @@ function Room() {
             },
         });
 
-        console.log(userState);
+        // console.log(userState);
         navigate(`/${userState.userId}`);
     };
     // console.log(userState);
-    const a = useParams();
+    //! 현재 접속한 방이 유저가(db) 들어온 방에 있는지 확인
+    const current_room = useParams();
     // console.log(a.room_id);
     const room = userState.userJoinedRoomList.filter(
-        (abc: any) => abc.room_id === a.room_id
+        (abc: any) => abc.room_id === current_room.room_id
     );
     // console.log(room[0]);
     useEffect(() => {
@@ -271,19 +245,7 @@ function Room() {
             currentRoom: room[0],
         });
     }, []);
-    console.log(userState);
-
-    const onNewMessage = (newMessage: any) => {
-        setRoomText((prevRoomText: any) => [...prevRoomText, newMessage]);
-    };
-
-    const onValid = async ({ text, text_time }: ITextForm) => {
-        setValue("text", "");
-        socket.emit("sendMessage", {
-            text,
-            user_nickname: userState.userNickname,
-        });
-    };
+    // console.log(userState);
 
     return (
         <>
@@ -314,28 +276,28 @@ function Room() {
                             isActive={true}
                             style={{ borderRadius: "30px 0 0 0" }}
                         >
-                            <Link to={""}>PLAYGROUND</Link>
+                            <Link to={"playground"}>PLAYGROUND</Link>
                         </Tab>
                         <VerticalLine />
                         <Tab isActive={false}>
-                            <Link to={""}>SUMMARY</Link>
+                            <Link to={"summary"}>SUMMARY</Link>
                         </Tab>
                         <VerticalLine />
                         <Tab isActive={false}>
-                            <Link to={""}>QUESTION</Link>
+                            <Link to={"question"}>QUESTION</Link>
                         </Tab>
                         <VerticalLine />
                         <Tab isActive={false}>
-                            <Link to={""}>QUIZ</Link>
+                            <Link to={"quiz"}>QUIZ</Link>
                         </Tab>
                     </Tabs>
 
                     <Container>
                         <Routes>
-                            <Route path="playground" />
-                            <Route path="summary" />
-                            <Route path="question" />
-                            <Route path="quiz" />
+                            <Route path="playground" element={<Playground />} />
+                            <Route path="summary" element={<Summary />} />
+                            <Route path="question" element={<Question />} />
+                            <Route path="quiz" element={<Quiz />} />
                         </Routes>
                     </Container>
 
@@ -346,19 +308,14 @@ function Room() {
                 <RoomList>
                     <ChatArea ref={chatContainerEl}>
                         {chats.map((chat, index) => (
-                            <ChattingBox
-                                key={index}
-                                className={classNames({
-                                    my_message: socket.id === chat.username,
-                                    alarm: !chat.username,
-                                })}
-                            >
+                            <ChattingBox key={index}>
                                 <span style={{ color: `#00d2d3` }}>
                                     {chat.username
                                         ? socket.id === chat.username
                                             ? ""
                                             : chat.username
                                         : ""}
+                                    {chat.username}
                                 </span>
                                 <Message>{chat.message}</Message>
                             </ChattingBox>

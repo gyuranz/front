@@ -8,7 +8,7 @@ import SpeechRecognition, {
 // const SpeechlySpeechRecognition = createSpeechlySpeechRecognition(appId);
 // SpeechRecognition.applyPolyfill(SpeechlySpeechRecognition);
 
-const Dictaphone = () => {
+const Playground = () => {
     const {
         transcript,
         listening,
@@ -43,4 +43,4 @@ const Dictaphone = () => {
         </div>
     );
 };
-export default Dictaphone;
+export default Playground;
