@@ -14,7 +14,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { AuthAtom, AuthLogin } from "../atoms";
 import { useHttpClient } from "../hooks/http-hook";
-import { MY_URL } from "../App";
 
 const Container = styled(motion.div)`
     ${containerStyle}
@@ -87,17 +86,20 @@ function Login() {
         // setValue("user_password", "");
         try {
             setIsLoaging(true);
-            const response = await fetch(`${MY_URL}/auth/login`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: " Bearer " + userState.token,
-                },
-                body: JSON.stringify({
-                    user_id,
-                    user_password,
-                }),
-            });
+            const response = await fetch(
+                `${process.env.REACT_APP_BACKEND_URL}/auth/login`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: " Bearer " + userState.token,
+                    },
+                    body: JSON.stringify({
+                        user_id,
+                        user_password,
+                    }),
+                }
+            );
             const responseData = await response.json();
 
             setIsLoaging(false);

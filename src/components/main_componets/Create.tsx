@@ -2,7 +2,6 @@ import React from "react";
 import { AuthLogin } from "../../atoms";
 import { useRecoilState } from "recoil";
 import { useNavigate, useParams } from "react-router-dom";
-import { MY_URL } from "../../App";
 import { useForm } from "react-hook-form";
 import { buttonStyle, inputVariants, mainBgColor } from "../Styles";
 import { styled } from "styled-components";
@@ -42,8 +41,6 @@ function Create() {
     const navigate = useNavigate();
     const [userState, setUserState] = useRecoilState(AuthLogin);
 
-    console.log(userState.userJoinedRoomList);
-
     const {
         register,
         handleSubmit,
@@ -54,7 +51,7 @@ function Create() {
     const onValid = async (room: IRoomForm) => {
         try {
             const response = await fetch(
-                `${MY_URL}/${userState.userId}/create`,
+                `${process.env.REACT_APP_BACKEND_URL}/${userState.userId}/create`,
                 {
                     method: "POST",
                     headers: {
@@ -89,7 +86,7 @@ function Create() {
             console.log(err);
         }
     };
-
+    console.log(userState.userJoinedRoomList, "create");
     return (
         <>
             {/* <div>hello, {userState.userNickname}</div>

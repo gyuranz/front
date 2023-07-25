@@ -12,7 +12,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { AuthAtom, AuthLogin } from "../atoms";
-import { MY_URL } from "../App";
 
 const Container = styled(motion.div)`
     ${containerStyle}
@@ -93,18 +92,22 @@ function Signup() {
         //! 특정 항목에 해당되는 에러가 아니라, 전체 form에 해당되는 에러
         // setError("extraError", { message: "Server offline." });
         try {
+            console.log(user_id, user_nickname);
             setIsLoading(true);
-            const response = await fetch(`${MY_URL}/auth/signup`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    user_id,
-                    user_nickname,
-                    user_password,
-                }),
-            });
+            const response = await fetch(
+                `${process.env.REACT_APP_BACKEND_URL}/auth/signup`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        user_id,
+                        user_nickname,
+                        user_password,
+                    }),
+                }
+            );
             const responseData = await response.json();
             setIsLoading(false);
             setLoginError(responseData.message);
@@ -148,6 +151,10 @@ function Signup() {
                         variants={inputVariants}
                         {...register("user_id", {
                             required: "ID is required",
+                            minLength: {
+                                value: 2,
+                                message: "Nickname is at least 3length",
+                            },
                             // pattern: {
                             //     value: /^[A-Za-z0-9._%+-]+@naver.com$/,
                             //     message: "Only naver.com emails allowed",

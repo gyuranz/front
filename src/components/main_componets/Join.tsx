@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { AuthLogin } from "../../atoms";
 import { useRecoilState } from "recoil";
 import { useNavigate, useParams } from "react-router-dom";
-import { MY_URL } from "../../App";
 import { useForm } from "react-hook-form";
 import { buttonStyle, inputVariants, mainBgColor } from "../Styles";
 import { styled } from "styled-components";
@@ -42,8 +41,6 @@ function Join() {
     const navigate = useNavigate();
     const [userState, setUserState] = useRecoilState(AuthLogin);
 
-    console.log(userState.userJoinedRoomList);
-
     const {
         register,
         handleSubmit,
@@ -53,17 +50,20 @@ function Join() {
 
     const onValid = async (room: IRoomForm) => {
         try {
-            const response = await fetch(`${MY_URL}/${userState.userId}/join`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: " Bearer " + userState.token,
-                },
-                body: JSON.stringify({
-                    room_id: room.room_id,
-                    room_password: room.room_password,
-                }),
-            });
+            const response = await fetch(
+                `${process.env.REACT_APP_BACKEND_URL}/${userState.userId}/join`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: " Bearer " + userState.token,
+                    },
+                    body: JSON.stringify({
+                        room_id: room.room_id,
+                        room_password: room.room_password,
+                    }),
+                }
+            );
             const responseData = await response.json();
 
             if (!response.ok) {
@@ -87,6 +87,10 @@ function Join() {
         }
     };
 
+    useEffect(() => {
+        console.log("abc");
+    }, []);
+    console.log(userState.userJoinedRoomList, "join");
     return (
         <>
             {/* <div>hello, {userState.userNickname}</div>

@@ -1,4 +1,3 @@
-import { MY_URL } from "../../App";
 import { io } from "socket.io-client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRecoilState } from "recoil";
@@ -16,7 +15,14 @@ import {
     reverseColor,
     reverseTextColor,
 } from "../Styles";
-import { Outlet, useNavigate, Link, useParams } from "react-router-dom";
+import {
+    Outlet,
+    useNavigate,
+    Link,
+    useParams,
+    Routes,
+    Route,
+} from "react-router-dom";
 import {
     faMicrophone,
     faMicrophoneSlash,
@@ -31,10 +37,10 @@ import classNames from "classnames";
 
 //! 소켓 api 꼭 같이 수정해주기
 // const socket = io(`http://15.164.100.230:8080/room`);
-const socket = io(`http://localhost:8080/room`);
+const socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`);
 
 const Container = styled.div`
-    background-color: rgba(0, 0, 0, 0.5);
+    /* background-color: rgba(0, 0, 0, 0.5); */
     height: 80vh;
 `;
 
@@ -64,10 +70,24 @@ const TextInputButton = styled(motion.button)`
 `;
 
 const ChatArea = styled.div`
-    background-color: rgba(0, 0, 0, 0.5);
     width: 100%;
     height: 80vh;
     margin-top: 4vh;
+    overflow-y: auto;
+`;
+
+const ChattingBox = styled(motion.div)`
+    margin: 10px 20px;
+`;
+
+const Message = styled.div`
+    margin-bottom: 0.5rem;
+    background: rgba(0, 0, 0, 0.1);
+    color: white;
+    /* max-width: 100%; */
+    padding: 5px;
+    border-radius: 0.5rem;
+    word-break: break-all;
 `;
 
 interface ITextForm {
@@ -135,21 +155,9 @@ const RoomOutButton = styled(motion.div)`
     transition: all 0.3s ease-in-out;
 `;
 
-const Message = styled.span`
-    margin-bottom: 0.5rem;
-    background: #fff;
-    width: fit-content;
-    padding: 12px;
-    border-radius: 0.5rem;
-`;
-
 const Video = styled.video`
     max-width: 100%;
     max-height: 100%;
-`;
-
-const ChattingBox = styled(motion.div)`
-    margin: 30px;
 `;
 
 //! 룸 나가기를 하면 userState의 current room 을 {}로 설정
@@ -160,7 +168,6 @@ function Room() {
     const [volume, setVolume] = useRecoilState(VolumeContidion);
     const navigate = useNavigate();
     const [userState, setUserState] = useRecoilState(AuthLogin);
-    const [sharing, setSharing] = useState(false);
     const [chats, setChats] = useState([]);
     const [message, setMessage] = useState("");
     const chatContainerEl = useRef(null);
@@ -223,34 +230,6 @@ function Room() {
         [message]
     );
 
-    // console.log(userState);
-    // console.log(fakeCurrentRoom);
-
-    //!
-    // const videoRef = useRef<HTMLVideoElement | null>(null);
-    // const shareScreen = async () => {
-    //     if (navigator.mediaDevices.getDisplayMedia) {
-    //         stream = await navigator.mediaDevices.getDisplayMedia({
-    //             audio: true,
-    //             video: {
-    //                 cursor: "always",
-    //             } as any,
-    //             // video: true,
-    //         });
-
-    //         console.log("stream", stream);
-    //         // videoRef.current?.srcObject = stream;
-    //         if (videoRef.current) videoRef.current.srcObject = stream;
-    //     }
-    // };
-    // const stopShareScreen = () => {
-    //     // let tracks = videoRef.current?.srcObject?.getTracks() as any;
-    //     // tracks.forEach((t: any) => t.stop());
-    //     if (videoRef.current) videoRef.current.srcObject = null;
-    // };
-
-    //!
-
     const volumeControl = () => {
         setVolume((prev) => !prev);
     };
@@ -291,43 +270,20 @@ function Room() {
             ...userState,
             currentRoom: room[0],
         });
-
-        //로딩 될때만 실행
     }, []);
     console.log(userState);
-
-    // const setabc = (text: string) => {
-    //     setRoomText([
-    //         ...roomText,
-    //         {
-    //             user_nickname: userState.userNickname,
-    //             chat: text,
-    //         },
-    //     ]);
-    // };
 
     const onNewMessage = (newMessage: any) => {
         setRoomText((prevRoomText: any) => [...prevRoomText, newMessage]);
     };
 
-    // socket.on("sendMessage", setabc);
-
-    // useEffect(() => {
-    //     socket.on("newMessage", onNewMessage);
-    //     return () => socket.off("newMessage", onNewMessage);
-    // }, []);
-
     const onValid = async ({ text, text_time }: ITextForm) => {
         setValue("text", "");
-        // setabc(text);
-        // socket.emit("sendMessage", text, setabc);
         socket.emit("sendMessage", {
             text,
             user_nickname: userState.userNickname,
         });
-        // console.log(userState);
     };
-    // console.log(roomText);
 
     return (
         <>
@@ -374,20 +330,13 @@ function Room() {
                         </Tab>
                     </Tabs>
 
-                    <Outlet />
                     <Container>
-                        {/* <button
-                            onClick={() => {
-                                shareScreen();
-                                // setSharing((prev) => !prev);
-                            }}
-                        >
-                            play
-                        </button>
-                        <button onClick={stopShareScreen}>stop</button>
-
-
-                        <Video ref={videoRef} autoPlay /> */}
+                        <Routes>
+                            <Route path="playground" />
+                            <Route path="summary" />
+                            <Route path="question" />
+                            <Route path="quiz" />
+                        </Routes>
                     </Container>
 
                     {/* <Dictaphone /> */}
@@ -395,32 +344,6 @@ function Room() {
                 <VerticalLine />
 
                 <RoomList>
-                    {/* <ChatArea ref={chatContainerEl}>
-                        {roomText?.map((roomText: any, index: any) => (
-                            <div key={index}>
-                                <span style={{ paddingRight: "10px" }}>
-                                    {roomText?.user_nickname}:
-                                </span>
-                                <span>{roomText?.chat}</span>
-                            </div>
-                        ))}
-                    </ChatArea>
-
-                    <form onSubmit={handleSubmit(onValid)}>
-                        <InputTextStyle>
-                            <div>
-                                <TextInput
-                                    type="text"
-                                    {...register("text", {
-                                        required: true,
-                                    })}
-                                    placeholder="INPUT TEXT"
-                                />
-                            </div>
-
-                            <TextInputButton>SEND</TextInputButton>
-                        </InputTextStyle>
-                    </form> */}
                     <ChatArea ref={chatContainerEl}>
                         {chats.map((chat, index) => (
                             <ChattingBox
@@ -430,16 +353,14 @@ function Room() {
                                     alarm: !chat.username,
                                 })}
                             >
-                                <span>
+                                <span style={{ color: `#00d2d3` }}>
                                     {chat.username
                                         ? socket.id === chat.username
                                             ? ""
                                             : chat.username
                                         : ""}
                                 </span>
-                                <Message className="message">
-                                    {chat.message}
-                                </Message>
+                                <Message>{chat.message}</Message>
                             </ChattingBox>
                         ))}
                     </ChatArea>
@@ -450,7 +371,7 @@ function Room() {
                                 onChange={onChange}
                                 value={message}
                             />
-                            <TextInputButton>보내기</TextInputButton>
+                            <TextInputButton>SEND</TextInputButton>
                         </InputTextStyle>
                     </form>
                 </RoomList>

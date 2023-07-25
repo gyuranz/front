@@ -12,10 +12,19 @@ import {
 import { useRecoilState } from "recoil";
 import { AuthLogin, MicCondition, VolumeContidion } from "../atoms";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, Link, Outlet } from "react-router-dom";
+import {
+    useNavigate,
+    useParams,
+    Link,
+    Outlet,
+    Routes,
+    Route,
+} from "react-router-dom";
 import { motion } from "framer-motion";
-import { MY_URL } from "../App";
 import { io } from "socket.io-client";
+import Finished from "./main_componets/Finished";
+import Join from "./main_componets/Join";
+import Create from "./main_componets/Create";
 
 let socket: any;
 
@@ -79,7 +88,7 @@ function Main() {
         console.log(userState);
         navigate("/auth/login");
     };
-    // socket = io(`${MY_URL}`);
+    // socket = io(`${process.env.REACT_APP_BACKEND_URL}`);
     // socket.emit("connection", "abc");
     // socket.on("newMessage", (data) => {
     //     console.log(data);
@@ -97,7 +106,7 @@ function Main() {
             try {
                 if (storedData) {
                     const response = await fetch(
-                        `${MY_URL}/${storedData.userId}`,
+                        `${process.env.REACT_APP_BACKEND_URL}/${storedData.userId}`,
                         {
                             method: "GET",
                             headers: {
@@ -170,7 +179,12 @@ function Main() {
                         </Tab>
                     </Tabs>
 
-                    <Outlet />
+                    {/* <Outlet /> */}
+                    <Routes>
+                        <Route path="finished" element={<Finished />} />
+                        <Route path="join" element={<Join />} />
+                        <Route path="create" element={<Create />} />
+                    </Routes>
                 </RoomList>
             </BaseContainer>
         </>
