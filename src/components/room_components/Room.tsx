@@ -56,7 +56,7 @@ const socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`, {
 });
 
 const Container = styled.div`
-    /* background-color: rgba(0, 0, 0, 0.5); */
+    background-color: rgba(0, 0, 0, 0.2);
     height: 80vh;
     padding: 10px;
 `;
