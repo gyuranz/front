@@ -38,8 +38,8 @@ export const AuthAtom = atom({
     },
 });
 
-export const toDoState = atom({
-    key: "toDo",
+export const SummaryAtom = atom({
+    key: "Summary",
     default: [
         "코드를 보면 알겠지만, 리액트에서 socket을 최상단에서 부르기 때문에 유저정보를 저장할 수 없어, 다른 방식은 없어?",
         "리액트 애플리케이션에서 최상단에서 소켓을 호출하여 유저 정보를 저장하는 것은 어려운 문제입니다. 그러나 이러한 경우에는 다른 방식을 사용하여 유저 정보를 서버에 전달하고 저장할 수 있습니다.",
