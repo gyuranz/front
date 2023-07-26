@@ -28,6 +28,7 @@ import Playground from "./Playground";
 import Question from "./Question";
 import Summary from "./Summary";
 import Quiz from "./Quiz";
+import { useForm } from "react-hook-form";
 
 //! STT
 const sampleRate = 16000;
@@ -59,6 +60,8 @@ const Container = styled.div`
     /* background-color: rgba(0, 0, 0, 0.2); */
     height: 80vh;
     padding: 10px;
+    //! MVP 끝나고 overflow 삭제
+    overflow: auto;
 `;
 
 const InputTextStyle = styled.div`
@@ -172,12 +175,6 @@ const RoomOutButton = styled(motion.div)`
     transition: all 0.3s ease-in-out;
 `;
 
-const Video = styled.video`
-    max-width: 100%;
-    max-height: 100%;
-`;
-
-let stream;
 function Room() {
     // let socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`);
     //! message event listener
@@ -194,7 +191,6 @@ function Room() {
     }, []);
     // console.log(chats);
     // ! STT
-    const [connectionControl, setConnectionControl] = useState(false);
     const [connection, setConnection] = useState<any>();
     const [currentRecognition, setCurrentRecognition] = useState<string>();
     const [recognitionHistory, setRecognitionHistory] = useState<string[]>([]);
@@ -203,6 +199,7 @@ function Room() {
     const processorRef = useRef<any>();
     const audioContextRef = useRef<any>();
     const audioInputRef = useRef<any>();
+    const { register, handleSubmit, setValue } = useForm();
     //! STT
     const navigate = useNavigate();
     const [mic, setMic] = useRecoilState(MicCondition);
@@ -235,7 +232,6 @@ function Room() {
     const connect = () => {
         if (!connection) {
             setConnection(socket);
-            setConnectionControl(true);
         }
 
         socket.emit("send_message", "hello world");
@@ -368,20 +364,21 @@ function Room() {
     const onChange = useCallback((e) => {
         setMessage(e.target.value);
     }, []);
+    console.log("a");
 
-    const onSendMessage = useCallback(
-        (e) => {
-            e.preventDefault();
-            if (!message) return alert("메시지를 입력해 주세요.");
+    const onSendMessage = handleSubmit((data) => {
+        const { message }: any = data;
+        if (!message) return alert("메시지를 입력해 주세요.");
 
-            socket.emit("message", message, (chat) => {
-                console.log(chat);
-                setChats((prevChats) => [...prevChats, chat]);
-                setMessage("");
-            });
-        },
-        [message]
-    );
+        socket.emit("message", message, (chat) => {
+            console.log(chat);
+            setChats((prevChats) => [...prevChats, chat]);
+            // setMessage("");
+        });
+
+        // 폼 데이터 전송 후 폼 리셋
+        setValue("message", "");
+    });
     //!
 
     const volumeControl = () => {
@@ -520,14 +517,16 @@ function Room() {
                             </ChattingBox>
                         ))}
                     </ChatArea>
+
                     <form onSubmit={onSendMessage}>
                         <InputTextStyle>
                             <TextInput
                                 type="text"
-                                onChange={onChange}
-                                value={message}
+                                {...register("message")} // useForm의 register 메소드로 폼 입력과 연결
                             />
-                            <TextInputButton>SEND</TextInputButton>
+                            <TextInputButton type="submit">
+                                SEND
+                            </TextInputButton>
                         </InputTextStyle>
                     </form>
                 </RoomList>
