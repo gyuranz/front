@@ -11,6 +11,7 @@ import {
     buttonStyle,
     containerStyle,
     containerVariants,
+    leftSideBoxVariants,
     mainBgColor,
     reverseColor,
     reverseTextColor,
@@ -75,6 +76,17 @@ const TextInput = styled(motion.input)`
     height: 6vh;
     border-radius: 0;
     font-size: 1.2rem;
+`;
+const IOButton = styled.button`
+    border: none;
+    background-color: transparent;
+    position: absolute;
+    top: -33px;
+    padding: 10px;
+    cursor: pointer;
+`;
+const SideOpenToolBox = styled(motion.div)`
+    position: relative;
 `;
 
 const TextInputButton = styled(motion.button)`
@@ -145,15 +157,6 @@ const RoomList = styled(motion.div)`
     height: 90vh;
     display: block;
     border-radius: 0 30px 30px 0;
-`;
-
-const IOButton = styled.button`
-    border: none;
-    background-color: transparent;
-    position: absolute;
-    top: 10px;
-    left: 30px;
-    padding: 10px;
 `;
 
 const RoomOutButton = styled(motion.div)`
@@ -420,45 +423,47 @@ function Room() {
 
     return (
         <>
-            <RoomOutButton onClick={RoomOutHandler}>ROOM OUT</RoomOutButton>
+            <RoomOutButton onClick={RoomOutHandler}>FINISH</RoomOutButton>
             <BaseContainer
                 variants={containerVariants}
                 initial="start"
                 animate="end"
             >
                 <MainContainer>
-                    <IOButton onClick={volumeControl}>
-                        {volume ? (
-                            <FontAwesomeIcon icon={faVolumeHigh} />
-                        ) : (
-                            <FontAwesomeIcon icon={faVolumeXmark} />
-                        )}
-                    </IOButton>
-                    <IOButton onClick={micControl} style={{ left: "60px" }}>
-                        {mic ? (
-                            <FontAwesomeIcon icon={faMicrophone} />
-                        ) : (
-                            <FontAwesomeIcon icon={faMicrophoneSlash} />
-                        )}
-                    </IOButton>
-                    <IOButton
-                        className={
-                            isRecording ? "btn-danger" : "btn-outline-light"
-                        }
-                        onClick={connect}
-                        disabled={isRecording}
-                        style={{ left: "120px" }}
-                    >
-                        Start
-                    </IOButton>
-                    <IOButton
-                        className="btn-outline-light"
-                        onClick={disconnect}
-                        disabled={!isRecording}
-                        style={{ left: "170px" }}
-                    >
-                        Stop
-                    </IOButton>
+                    <SideOpenToolBox variants={leftSideBoxVariants}>
+                        <IOButton onClick={volumeControl}>
+                            {volume ? (
+                                <FontAwesomeIcon icon={faVolumeHigh} />
+                            ) : (
+                                <FontAwesomeIcon icon={faVolumeXmark} />
+                            )}
+                        </IOButton>
+                        <IOButton onClick={micControl} style={{ left: "30px" }}>
+                            {mic ? (
+                                <FontAwesomeIcon icon={faMicrophone} />
+                            ) : (
+                                <FontAwesomeIcon icon={faMicrophoneSlash} />
+                            )}
+                        </IOButton>
+                        <IOButton
+                            className={
+                                isRecording ? "btn-danger" : "btn-outline-light"
+                            }
+                            onClick={connect}
+                            disabled={isRecording}
+                            style={{ left: "80px" }}
+                        >
+                            Start
+                        </IOButton>
+                        <IOButton
+                            className="btn-outline-light"
+                            onClick={disconnect}
+                            disabled={!isRecording}
+                            style={{ left: "120px" }}
+                        >
+                            Stop
+                        </IOButton>
+                    </SideOpenToolBox>
 
                     <Tabs style={{ margin: "0" }}>
                         <Tab
@@ -489,7 +494,18 @@ function Room() {
                             <Route path="quiz" element={<Quiz />} />
                         </Routes>
 
-                        <div style={{ width: "100%", height: "70vh" }}>
+                        <div
+                            style={{
+                                width: "100%",
+                                height: "70vh",
+                                color: "white",
+                                // fontWeight: "bold",
+                                fontSize: "24px",
+                                backgroundColor: "rgba(0,0,0,0.1)",
+                                padding: "10px",
+                                borderRadius: "20px",
+                            }}
+                        >
                             {STTMessage.map((message, idx) => (
                                 <p key={idx}>{message}</p>
                             ))}
@@ -499,7 +515,7 @@ function Room() {
 
                     {/* <Dictaphone /> */}
                 </MainContainer>
-                <VerticalLine />
+                {/* <VerticalLine /> */}
 
                 <RoomList>
                     <ChatArea ref={chatContainerEl}>

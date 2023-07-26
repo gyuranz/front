@@ -7,7 +7,7 @@ import {
     Droppable,
 } from "react-beautiful-dnd";
 import styled from "styled-components";
-import { SummaryAtom } from "../../atoms";
+import { AuthLogin, SummaryAtom } from "../../atoms";
 
 const Board = styled.div`
     padding: 20px 10px;
@@ -35,13 +35,8 @@ const chunkData = [
 //! summay 클릭시 fetch로 summary 데이터를 가져옴.
 //! 가져온 데이터를 배열로 바꾼후 (. 기준 혹은 다른 기준을 정해야 할듯)
 function Summary() {
+    const [userState, setUserState] = useRecoilState(AuthLogin);
     const [SummaryArray, setSummaryArraySet] = useRecoilState(SummaryAtom);
-    useEffect(() => {
-        setSummaryArraySet((prev) => {
-            prev = [...chunkData];
-            return chunkData;
-        });
-    }, []);
 
     const onDragEnd = ({ draggableId, destination, source }: DropResult) => {
         if (!destination) return;
@@ -54,6 +49,36 @@ function Summary() {
             return copySummary;
         });
     };
+    useEffect(() => {
+        setSummaryArraySet((prev) => {
+            prev = [...chunkData];
+            return chunkData;
+        });
+
+        const sendRequest = async () => {
+            try {
+                const response = await fetch(
+                    `${process.env.REACT_APP_BACKEND_URL}/room/${userState.currentRoom.room_id}/summary`,
+                    {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: " Bearer " + userState.token,
+                        },
+                    }
+                );
+
+                const responseData = await response.json();
+                if (!response.ok) {
+                    throw new Error(responseData.message);
+                }
+                console.log(responseData);
+            } catch (err) {
+                console.log(err);
+            }
+        };
+        sendRequest();
+    }, []);
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <div>

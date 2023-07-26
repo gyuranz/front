@@ -39,6 +39,16 @@ export const inputVariants = {
         y: 0,
     },
 };
+export const leftSideBoxVariants = {
+    start: {
+        opacity: 0,
+        x: -300,
+    },
+    end: {
+        opacity: 1,
+        x: 0,
+    },
+};
 
 export const buttonStyle = css`
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.2);
@@ -78,9 +88,6 @@ export const Tabs = styled.div`
     margin-bottom: 10px;
 `;
 export const Tab = styled.div<{ isActive: boolean }>`
-    display: flex;
-    align-items: center;
-    justify-content: center;
     height: 50px;
     width: 100%;
     transition: 0.3s all ease-in-out;
@@ -90,8 +97,11 @@ export const Tab = styled.div<{ isActive: boolean }>`
     color: ${(props) =>
         props.isActive ? props.theme.accentColor : props.theme.textColor};
     a {
-        padding: 7px 0px;
         display: block;
+        width: inherit;
+        height: 100%;
+        text-align: center;
+        line-height: 300%;
     }
 `;
 export const VerticalLine = styled.div`
