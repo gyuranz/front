@@ -51,12 +51,12 @@ interface WordRecognized {
 
 //! 소켓 api 꼭 같이 수정해주기
 // const socket = io(`http://15.164.100.230:8080/room`);
-// const socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`, {
-//     query: { user: JSON.stringify("a") },
-// });
+const socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`, {
+    query: { user: JSON.stringify("a") },
+});
 
 const Container = styled.div`
-    background-color: rgba(0, 0, 0, 0.2);
+    /* background-color: rgba(0, 0, 0, 0.2); */
     height: 80vh;
     padding: 10px;
 `;
@@ -179,10 +179,9 @@ const Video = styled.video`
 
 let stream;
 function Room() {
-    let socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`);
+    // let socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`);
     //! message event listener
     useEffect(() => {
-        // setConnection(socket);
         // socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`);
         const messageHandler = (chat) => {
             setChats((prevChats) => [...prevChats, chat]);
@@ -195,6 +194,7 @@ function Room() {
     }, []);
     // console.log(chats);
     // ! STT
+    const [connectionControl, setConnectionControl] = useState(false);
     const [connection, setConnection] = useState<any>();
     const [currentRecognition, setCurrentRecognition] = useState<string>();
     const [recognitionHistory, setRecognitionHistory] = useState<string[]>([]);
@@ -203,18 +203,27 @@ function Room() {
     const processorRef = useRef<any>();
     const audioContextRef = useRef<any>();
     const audioInputRef = useRef<any>();
+    //! STT
+    const navigate = useNavigate();
+    const [mic, setMic] = useRecoilState(MicCondition);
+    const [volume, setVolume] = useRecoilState(VolumeContidion);
+    const [userState, setUserState] = useRecoilState(AuthLogin);
+    const [chats, setChats] = useState([]);
+    const [message, setMessage] = useState("");
+    const chatContainerEl = useRef(null);
 
     const [STTMessage, setSTTMessage] = useState<string[]>([]);
 
+    //! STT
     // * 서버로 부터 받은 음성 인식 결과를 처리하는 함수
-    const speechRecognized = (data: WordRecognized) => {
+    const speechRecognized = useCallback((data: WordRecognized) => {
         if (data.isFinal) {
             setCurrentRecognition("...");
             //*
             setRecognitionHistory((old) => [...old, data.text]);
             setSTTMessage((prev) => [...prev, data.text]);
         } else setCurrentRecognition(data.text + "...");
-    };
+    }, []);
 
     //* 서버로부터 받은 음성 인식 결과를 처리하는 speechRecognized 함수에서
     //* recognitionHistory를 변경하기에 실행되는 함수. console.log로 보여줌
@@ -224,31 +233,30 @@ function Room() {
 
     //* 서버와의 연결을 설정하고, 음성 녹음 및 전송을 위한 준비를 한다.
     const connect = () => {
-        // const socket = io.connect("http://localhost:8081");
-        // connection?.disconnect();
-
-        // socket.on("connect", () => {
-        //     console.log("connected", socket.id);
-        //     setConnection(socket);
-        // });
+        if (!connection) {
+            setConnection(socket);
+            setConnectionControl(true);
+        }
 
         socket.emit("send_message", "hello world");
 
         socket.emit("startGoogleCloudStream");
 
-        socket.on("receive_message", (data) => {
-            console.log("received message", data);
-        });
-
-        socket.on("receive_audio_text", (data) => {
-            speechRecognized(data);
-            // console.log("received audio text", data);
-        });
-
         socket.on("disconnect", () => {
             console.log("disconnected", socket.id);
         });
     };
+
+    useEffect(() => {
+        // 이벤트 핸들러 등록
+        socket.on("receive_audio_text", speechRecognized);
+
+        // cleanup function: 컴포넌트가 언마운트 될 때 실행됩니다.
+        return () => {
+            // 이벤트 핸들러 해제
+            socket.off("receive_audio_text", speechRecognized);
+        };
+    }, [connection, isRecording, speechRecognized]);
 
     //* 서버와의 연결의 해제하는 함수, 녹음과 관련된 상태와 객체들을 초기화하고 연결을 해제
     const disconnect = () => {
@@ -261,7 +269,7 @@ function Room() {
         connection?.emit("endGoogleCloudStream");
         //* connection?.disconnect()를 호출하여 클라이언트와 서버 간의 소켓 연결을 끊습니다.
         //* 이로써 클라이언트와 서버 간의 통신이 종료됩니다.
-        connection?.disconnect();
+        // connection?.disconnect();
         //* processorRef.current?.disconnect()를 호출하여 워크렛 프로세서를 해제합니다.
         //* 워크렛은 음성 녹음을 처리하는 커스텀 프로세서입니다.
         processorRef.current?.disconnect();
@@ -344,15 +352,7 @@ function Room() {
             }
         };
     }, [connection, isRecording, recorder]);
-    //! STT
 
-    const navigate = useNavigate();
-    const [mic, setMic] = useRecoilState(MicCondition);
-    const [volume, setVolume] = useRecoilState(VolumeContidion);
-    const [userState, setUserState] = useRecoilState(AuthLogin);
-    const [chats, setChats] = useState([]);
-    const [message, setMessage] = useState("");
-    const chatContainerEl = useRef(null);
     //! 채팅이 길어지면(chats.length) 스크롤이 생성되므로, 스크롤의 위치를 최근 메시지에 위치시키기 위함
     useEffect(() => {
         if (!chatContainerEl.current) return;
@@ -444,6 +444,24 @@ function Room() {
                             <FontAwesomeIcon icon={faMicrophoneSlash} />
                         )}
                     </IOButton>
+                    <IOButton
+                        className={
+                            isRecording ? "btn-danger" : "btn-outline-light"
+                        }
+                        onClick={connect}
+                        disabled={isRecording}
+                        style={{ left: "120px" }}
+                    >
+                        Start
+                    </IOButton>
+                    <IOButton
+                        className="btn-outline-light"
+                        onClick={disconnect}
+                        disabled={!isRecording}
+                        style={{ left: "170px" }}
+                    >
+                        Stop
+                    </IOButton>
 
                     <Tabs style={{ margin: "0" }}>
                         <Tab
@@ -473,22 +491,7 @@ function Room() {
                             <Route path="question" element={<Question />} />
                             <Route path="quiz" element={<Quiz />} />
                         </Routes>
-                        <button
-                            className={
-                                isRecording ? "btn-danger" : "btn-outline-light"
-                            }
-                            onClick={connect}
-                            disabled={isRecording}
-                        >
-                            Start
-                        </button>
-                        <button
-                            className="btn-outline-light"
-                            onClick={disconnect}
-                            disabled={!isRecording}
-                        >
-                            Stop
-                        </button>
+
                         <div style={{ width: "100%", height: "70vh" }}>
                             {STTMessage.map((message, idx) => (
                                 <p key={idx}>{message}</p>
