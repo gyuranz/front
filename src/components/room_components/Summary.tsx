@@ -58,11 +58,11 @@ function Summary() {
                 if (!response.ok) {
                     throw new Error(responseData.message);
                 }
+                console.log(responseData.summary);
                 setSummaryArraySet((prev) => {
                     prev = [...responseData.summary];
                     return responseData.summary;
                 });
-                console.log(responseData);
             } catch (err) {
                 console.log(err);
             }
