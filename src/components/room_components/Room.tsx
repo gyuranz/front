@@ -57,7 +57,7 @@ const Container = styled.div`
     height: 80vh;
     padding: 10px;
     //! MVP 끝나고 overflow 삭제
-    overflow: auto;
+    /* overflow: auto; */
 `;
 
 const InputTextStyle = styled.div`
@@ -184,13 +184,8 @@ socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`, {
     query: { user: JSON.stringify(storedData.userNickname) },
 });
 function Room() {
-    const [socketRoom, setSocketRoom] = useState<any>("");
     useEffect(() => {
-        // room 과 name이 뭐로 출력되는지 확인
-        //! join으로 들어가지는지 동윤이랑 확인
-
-        console.log(current_room_id);
-        setSocketRoom(current_room_id);
+        // console.log(current_room_id);
 
         socket.emit("join-room", current_room_id);
         // return () => {
@@ -242,7 +237,15 @@ function Room() {
             setRecognitionHistory((old) => [...old, data.text]);
             setSTTMessage((prev) => [...prev, data.text]);
         } else setCurrentRecognition(data.text + "...");
+
+        socket.on("broadcastAudio", (audioData) => {
+            // Handle received audio data and play it back using the Web Audio API or Audio element
+            // For simplicity, this example doesn't include the playback implementation.
+            console.log("Received audio data:", audioData);
+        });
     }, []);
+
+    //! audio
 
     //* 서버로부터 받은 음성 인식 결과를 처리하는 speechRecognized 함수에서
     //* recognitionHistory를 변경하기에 실행되는 함수. console.log로 보여줌
@@ -413,6 +416,12 @@ function Room() {
     };
     //! 룸 나가기를 하면 userState의 current room 을 {}로 설정
     const RoomOutHandler = () => {
+        //! 소켓 룸에서도 나가는 기능 해야함
+        socket.emit("leave-room", { room_id: current_room_id }, () => {
+            console.log(
+                `${storedData.userNickname} 님이 ${current_room_id}에서 나가셨습니다.`
+            );
+        });
         setUserState({
             ...userState,
             currentRoom: {
@@ -531,15 +540,13 @@ function Room() {
                                         ? chat.user_nickname
                                         : "ME"}
                                 </span>
-                                <Message>
-                                    {chat.message ? chat.message : message}
-                                </Message>
+                                <Message>{chat.message}</Message>
                             </ChattingBox>
                         ))}
                         {/*//! STT 메세지 나오는 부분 */}
                         {STTMessage.map((message, idx) => (
                             <ChattingBox key={idx}>
-                                <span style={{ color: `#00d2d3` }}>ID</span>
+                                <span style={{ color: `#00d2d3` }}>발표자</span>
                                 <Message>{message}</Message>
                             </ChattingBox>
                         ))}
