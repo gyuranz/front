@@ -197,12 +197,13 @@ function Room() {
         //     socket.emit("disconnect");
         //     socket.off();
         // };
-    }, [`${process.env.REACT_APP_BACKEND_URL}`]);
+    }, [`${window.location.host}`]);
     // let socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`);
     //! message event listener
     useEffect(() => {
         // socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`);
         const messageHandler = (chat) => {
+            console.log(chat);
             setChats((prevChats) => [...prevChats, chat]);
         };
         socket.on("message", messageHandler);
@@ -383,19 +384,19 @@ function Room() {
         }
     }, [chats.length]);
 
-    const onChange = useCallback((e) => {
-        setMessage(e.target.value);
-    }, []);
-
     const onSendMessage = handleSubmit((data) => {
         const { message }: any = data;
         if (!message) return alert("메시지를 입력해 주세요.");
 
-        socket.emit("message", message, (chat) => {
-            console.log(chat);
-            setChats((prevChats) => [...prevChats, chat]);
-            // setMessage("");
-        });
+        socket.emit(
+            "message",
+            { user_nickname: storedData.userNickname, message: message },
+            (chat) => {
+                console.log(chat.message);
+                setChats((prevChats) => [...prevChats, chat.message]);
+                // setMessage("");
+            }
+        );
 
         // 폼 데이터 전송 후 폼 리셋
         setValue("message", "");
@@ -519,6 +520,7 @@ function Room() {
 
                 <RoomList>
                     <ChatArea ref={chatContainerEl}>
+                        {/*//! text 메세지 나오는 부분 */}
                         {chats.map((chat, index) => (
                             <ChattingBox key={index}>
                                 <span style={{ color: `#00d2d3` }}>
@@ -532,13 +534,14 @@ function Room() {
                                 <Message>{chat.message}</Message>
                             </ChattingBox>
                         ))}
+                        {/*//! STT 메세지 나오는 부분 */}
                         {STTMessage.map((message, idx) => (
                             <ChattingBox key={idx}>
                                 <span style={{ color: `#00d2d3` }}>ID</span>
                                 <Message>{message}</Message>
                             </ChattingBox>
                         ))}
-                        <p>{currentRecognition}</p>
+                        {/* <p>{currentRecognition}</p> */}
                     </ChatArea>
 
                     <form onSubmit={onSendMessage}>
