@@ -35,14 +35,14 @@ import { useForm } from "react-hook-form";
 const sampleRate = 16000;
 
 const getMediaStream = () =>
-    navigator.mediaDevices.getUserMedia({
+    navigator.mediaDevices.getDisplayMedia({
         audio: {
             deviceId: "default",
             sampleRate: sampleRate,
             sampleSize: 16,
             channelCount: 1,
         },
-        video: false,
+        video: true,
     });
 
 interface WordRecognized {
