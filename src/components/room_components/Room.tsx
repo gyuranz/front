@@ -192,11 +192,7 @@ function Room() {
         console.log(room_id);
         setSocketRoom(room_id);
 
-        socket.emit("join-room", { room_id }, (err) => {
-            if (err) {
-                alert(err);
-            }
-        });
+        socket.emit("join-room", room_id);
         // return () => {
         //     socket.emit("disconnect");
         //     socket.off();
