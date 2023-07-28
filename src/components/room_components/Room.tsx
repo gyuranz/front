@@ -1,4 +1,5 @@
 import { io } from "socket.io-client";
+import queryString from "query-string";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRecoilState } from "recoil";
 import { AuthLogin, MicCondition, VolumeContidion } from "../../atoms";
@@ -35,14 +36,14 @@ import { useForm } from "react-hook-form";
 const sampleRate = 16000;
 
 const getMediaStream = () =>
-    navigator.mediaDevices.getDisplayMedia({
+    navigator.mediaDevices.getUserMedia({
         audio: {
             deviceId: "default",
             sampleRate: sampleRate,
             sampleSize: 16,
             channelCount: 1,
         },
-        video: true,
+        video: false,
     });
 
 interface WordRecognized {
@@ -50,12 +51,6 @@ interface WordRecognized {
     text: string;
 }
 //! STT
-
-//! 소켓 api 꼭 같이 수정해주기
-// const socket = io(`http://15.164.100.230:8080/room`);
-const socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`, {
-    query: { user: JSON.stringify("a") },
-});
 
 const Container = styled.div`
     /* background-color: rgba(0, 0, 0, 0.2); */
@@ -177,8 +172,36 @@ const RoomOutButton = styled(motion.div)`
     }
     transition: all 0.3s ease-in-out;
 `;
-
+//! 소켓 api 꼭 같이 수정해주기
+// const socket = io(`http://15.164.100.230:8080/room`);
+// const socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`, {
+//     query: { user: JSON.stringify(storedData.userNickname) },
+// });
+let socket;
+const storedData = JSON.parse(localStorage.getItem("userData") as string);
+socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`, {
+    query: { user: JSON.stringify(storedData.userNickname) },
+});
 function Room() {
+    const [socketRoom, setSocketRoom] = useState<any>("");
+    useEffect(() => {
+        // room 과 name이 뭐로 출력되는지 확인
+        //! join으로 들어가지는지 동윤이랑 확인
+
+        const room_id = window.location.pathname.split("/")[2];
+        console.log(room_id);
+        setSocketRoom(room_id);
+
+        socket.emit("join-room", { room_id }, (err) => {
+            if (err) {
+                alert(err);
+            }
+        });
+        // return () => {
+        //     socket.emit("disconnect");
+        //     socket.off();
+        // };
+    }, [`${process.env.REACT_APP_BACKEND_URL}`]);
     // let socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`);
     //! message event listener
     useEffect(() => {
@@ -367,7 +390,6 @@ function Room() {
     const onChange = useCallback((e) => {
         setMessage(e.target.value);
     }, []);
-    console.log("a");
 
     const onSendMessage = handleSubmit((data) => {
         const { message }: any = data;
@@ -493,24 +515,6 @@ function Room() {
                             <Route path="question" element={<Question />} />
                             <Route path="quiz" element={<Quiz />} />
                         </Routes>
-
-                        <div
-                            style={{
-                                width: "100%",
-                                height: "70vh",
-                                color: "white",
-                                // fontWeight: "bold",
-                                fontSize: "24px",
-                                backgroundColor: "rgba(0,0,0,0.1)",
-                                padding: "10px",
-                                borderRadius: "20px",
-                            }}
-                        >
-                            {STTMessage.map((message, idx) => (
-                                <p key={idx}>{message}</p>
-                            ))}
-                            <p>{currentRecognition}</p>
-                        </div>
                     </Container>
 
                     {/* <Dictaphone /> */}
@@ -532,6 +536,13 @@ function Room() {
                                 <Message>{chat.message}</Message>
                             </ChattingBox>
                         ))}
+                        {STTMessage.map((message, idx) => (
+                            <ChattingBox key={idx}>
+                                <span style={{ color: `#00d2d3` }}>ID</span>
+                                <Message>{message}</Message>
+                            </ChattingBox>
+                        ))}
+                        <p>{currentRecognition}</p>
                     </ChatArea>
 
                     <form onSubmit={onSendMessage}>
