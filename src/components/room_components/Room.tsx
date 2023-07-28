@@ -203,7 +203,6 @@ function Room() {
     useEffect(() => {
         // socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`);
         const messageHandler = (chat) => {
-            console.log(chat);
             setChats((prevChats) => [...prevChats, chat]);
         };
         socket.on("message", messageHandler);
@@ -392,8 +391,9 @@ function Room() {
             "message",
             { user_nickname: storedData.userNickname, message: message },
             (chat) => {
-                console.log(chat.message);
-                setChats((prevChats) => [...prevChats, chat.message]);
+                // console.log(chat.message);
+                setChats((prevChats) => [...prevChats, chat]);
+                console.log(chats);
                 // setMessage("");
             }
         );
@@ -524,14 +524,14 @@ function Room() {
                         {chats.map((chat, index) => (
                             <ChattingBox key={index}>
                                 <span style={{ color: `#00d2d3` }}>
-                                    {chat.username
-                                        ? socket.id === chat.username
-                                            ? ""
-                                            : chat.username
-                                        : ""}
-                                    {chat.username}
+                                    {chat.user_nickname !==
+                                    storedData.userNickname
+                                        ? chat.user_nickname
+                                        : "ME"}
                                 </span>
-                                <Message>{chat.message}</Message>
+                                <Message>
+                                    {chat.message ? chat.message : message}
+                                </Message>
                             </ChattingBox>
                         ))}
                         {/*//! STT 메세지 나오는 부분 */}
