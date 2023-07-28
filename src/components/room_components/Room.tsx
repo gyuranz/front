@@ -178,6 +178,7 @@ const RoomOutButton = styled(motion.div)`
 //     query: { user: JSON.stringify(storedData.userNickname) },
 // });
 let socket;
+const current_room_id = window.location.pathname.split("/")[2];
 const storedData = JSON.parse(localStorage.getItem("userData") as string);
 socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`, {
     query: { user: JSON.stringify(storedData.userNickname) },
@@ -188,11 +189,10 @@ function Room() {
         // room 과 name이 뭐로 출력되는지 확인
         //! join으로 들어가지는지 동윤이랑 확인
 
-        const room_id = window.location.pathname.split("/")[2];
-        console.log(room_id);
-        setSocketRoom(room_id);
+        console.log(current_room_id);
+        setSocketRoom(current_room_id);
 
-        socket.emit("join-room", room_id);
+        socket.emit("join-room", current_room_id);
         // return () => {
         //     socket.emit("disconnect");
         //     socket.off();
@@ -389,12 +389,14 @@ function Room() {
 
         socket.emit(
             "message",
-            { user_nickname: storedData.userNickname, message: message },
+            {
+                user_nickname: storedData.userNickname,
+                message: message,
+                room_id: current_room_id,
+            },
             (chat) => {
-                // console.log(chat.message);
                 setChats((prevChats) => [...prevChats, chat]);
                 console.log(chats);
-                // setMessage("");
             }
         );
 
@@ -427,9 +429,9 @@ function Room() {
     // console.log(userState);
     //! 현재 접속한 방이 유저가(db) 들어온 방에 있는지 확인
     const current_room = useParams();
-    // console.log(a.room_id);
+
     const room = userState.userJoinedRoomList.filter(
-        (abc: any) => abc.room_id === current_room.room_id
+        (room: any) => room.room_id === current_room.room_id
     );
     // console.log(room[0]);
     useEffect(() => {
