@@ -32,26 +32,6 @@ import Summary from "./Summary";
 import Quiz from "./Quiz";
 import { useForm } from "react-hook-form";
 
-//! STT
-const sampleRate = 16000;
-
-const getMediaStream = () =>
-    navigator.mediaDevices.getUserMedia({
-        audio: {
-            deviceId: "default",
-            sampleRate: sampleRate,
-            sampleSize: 16,
-            channelCount: 1,
-        },
-        video: false,
-    });
-
-interface WordRecognized {
-    isFinal: boolean;
-    text: string;
-}
-//! STT
-
 const Container = styled.div`
     /* background-color: rgba(0, 0, 0, 0.2); */
     height: 80vh;
@@ -122,6 +102,11 @@ interface ITextForm {
     text_time: number;
 }
 
+interface WordRecognized {
+    isFinal: boolean;
+    text: string;
+}
+
 const BaseContainer = styled(motion.div)`
     ${containerStyle}
     width: 95vw;
@@ -183,7 +168,92 @@ const storedData = JSON.parse(localStorage.getItem("userData") as string);
 socket = io(`${process.env.REACT_APP_BACKEND_URL}/room`, {
     query: { user: JSON.stringify(storedData.userNickname) },
 });
+//! STT
+const sampleRate = 16000;
+
+const getMediaStream = () =>
+    navigator.mediaDevices.getUserMedia({
+        audio: {
+            deviceId: "default",
+            sampleRate: sampleRate,
+            sampleSize: 16,
+            channelCount: 1,
+        },
+        video: false,
+    });
+
+//! STT
 function Room() {
+    const [mic, setMic] = useRecoilState(MicCondition);
+    const [volume, setVolume] = useRecoilState(VolumeContidion);
+
+    const [myVideoStream, setMyVideoStream] = useState(null);
+    const myFaceRef = useRef(null);
+    const peerFaceRef = useRef(null);
+
+    // let myStream;
+    let myPeerConnection;
+    const myPeerConnectionRef = useRef(null);
+
+    async function getMedia() {
+        try {
+            const myStream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: true,
+            });
+            setMyVideoStream(myStream);
+            myFaceRef.current.srcObject = myStream;
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    function makeConnection() {
+        myPeerConnection = new RTCPeerConnection();
+        myPeerConnectionRef.current = new RTCPeerConnection();
+        //! 바로 myVideoStream을 가져오지 못함
+        console.log(myVideoStream);
+        myVideoStream
+            ?.getTracks()
+            .forEach((track) =>
+                myPeerConnection.addTrack(track, myVideoStream)
+            );
+        myVideoStream
+            ?.getTracks()
+            .forEach((track) =>
+                myPeerConnectionRef.current.addTrack(track, myVideoStream)
+            );
+    }
+    // getMedia();
+    async function startVideo() {
+        try {
+            await getMedia();
+            makeConnection();
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    socket.on("welcome", () => {
+        console.log("someone joined");
+    });
+    useEffect(() => {}, []);
+
+    //! 비디오 끄고 켜기
+    const volumeControl = () => {
+        // console.log(myVideoStream.getVideoTracks());
+        setVolume((prev) => !prev);
+        myVideoStream
+            .getVideoTracks()
+            .forEach((track) => (track.enabled = !track.enabled));
+    };
+    //! 마이크 음소거
+    const micControl = () => {
+        myVideoStream
+            .getAudioTracks()
+            .forEach((track) => (track.enabled = !track.enabled));
+        setMic((prev) => !prev);
+    };
+    //! audio 끝!
     useEffect(() => {
         // console.log(current_room_id);
 
@@ -219,8 +289,6 @@ function Room() {
     const { register, handleSubmit, setValue } = useForm();
     //! STT
     const navigate = useNavigate();
-    const [mic, setMic] = useRecoilState(MicCondition);
-    const [volume, setVolume] = useRecoilState(VolumeContidion);
     const [userState, setUserState] = useRecoilState(AuthLogin);
     const [chats, setChats] = useState([]);
     const [message, setMessage] = useState("");
@@ -408,12 +476,6 @@ function Room() {
     });
     //!
 
-    const volumeControl = () => {
-        setVolume((prev) => !prev);
-    };
-    const micControl = () => {
-        setMic((prev) => !prev);
-    };
     //! 룸 나가기를 하면 userState의 current room 을 {}로 설정
     const RoomOutHandler = () => {
         //! 소켓 룸에서도 나가는 기능 해야함
@@ -463,16 +525,16 @@ function Room() {
                     <SideOpenToolBox variants={leftSideBoxVariants}>
                         <IOButton onClick={volumeControl}>
                             {volume ? (
-                                <FontAwesomeIcon icon={faVolumeHigh} />
-                            ) : (
                                 <FontAwesomeIcon icon={faVolumeXmark} />
+                            ) : (
+                                <FontAwesomeIcon icon={faVolumeHigh} />
                             )}
                         </IOButton>
                         <IOButton onClick={micControl} style={{ left: "30px" }}>
                             {mic ? (
-                                <FontAwesomeIcon icon={faMicrophone} />
-                            ) : (
                                 <FontAwesomeIcon icon={faMicrophoneSlash} />
+                            ) : (
+                                <FontAwesomeIcon icon={faMicrophone} />
                             )}
                         </IOButton>
                         <IOButton
@@ -494,7 +556,6 @@ function Room() {
                             Stop
                         </IOButton>
                     </SideOpenToolBox>
-
                     <Tabs style={{ margin: "0" }}>
                         <Tab
                             isActive={true}
@@ -515,7 +576,6 @@ function Room() {
                             <Link to={"quiz"}>QUIZ</Link>
                         </Tab>
                     </Tabs>
-
                     <Container>
                         <Routes>
                             <Route path="playground" element={<Playground />} />
@@ -523,8 +583,18 @@ function Room() {
                             <Route path="question" element={<Question />} />
                             <Route path="quiz" element={<Quiz />} />
                         </Routes>
+                        <div id="myStream">
+                            <button onClick={startVideo}>start</button>
+                            <video
+                                id="myFace"
+                                autoPlay
+                                // muted
+                                width={100}
+                                height={100}
+                                ref={myFaceRef}
+                            ></video>
+                        </div>
                     </Container>
-
                     {/* <Dictaphone /> */}
                 </MainContainer>
                 {/* <VerticalLine /> */}
