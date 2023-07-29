@@ -212,7 +212,7 @@ function Room() {
         myPeerConnection = new RTCPeerConnection();
         myPeerConnectionRef.current = new RTCPeerConnection();
         //! 바로 myVideoStream을 가져오지 못함
-        console.log(myVideoStream);
+        // console.log(myVideoStream);
         myVideoStream
             ?.getTracks()
             .forEach((track) =>
@@ -227,16 +227,27 @@ function Room() {
     // getMedia();
     async function startVideo() {
         try {
-            await getMedia();
-            makeConnection();
+            // await getMedia();
+            // makeConnection();
         } catch (e) {
             console.log(e);
         }
     }
-    socket.on("welcome", () => {
-        console.log("someone joined");
-    });
-    useEffect(() => {}, []);
+    useEffect(() => {
+        socket.on("join-room", async (welcome) => {
+            makeConnection();
+            console.log(`${storedData.userId}님이 입장하셨습니다.${welcome}`);
+
+            const offer = await myPeerConnection.createOffer();
+            myPeerConnection.setLocalDescription(offer);
+            socket.emit("offer", { offer, roomName: current_room_id });
+            console.log(offer);
+        });
+
+        socket.on("offer", (offer) => {
+            console.log(offer.offer);
+        });
+    }, []);
 
     //! 비디오 끄고 켜기
     const volumeControl = () => {
@@ -256,8 +267,11 @@ function Room() {
     //! audio 끝!
     useEffect(() => {
         // console.log(current_room_id);
+        getMedia();
 
-        socket.emit("join-room", current_room_id);
+        socket.emit("join-room", current_room_id, async () => {
+            // console.log(`${storedData.userId}님이 입장하셨습니다.`);
+        });
         // return () => {
         //     socket.emit("disconnect");
         //     socket.off();
