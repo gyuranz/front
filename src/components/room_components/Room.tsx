@@ -187,12 +187,13 @@ function Room() {
     const [mic, setMic] = useRecoilState(MicCondition);
     const [volume, setVolume] = useRecoilState(VolumeContidion);
 
-    const [myVideoStream, setMyVideoStream] = useState(null);
+    const [myVideoStream, setMyVideoStream] = useState<any>();
     const myFaceRef = useRef(null);
     const peerFaceRef = useRef(null);
 
-    // let myStream;
+    // const [myPeerConnection, setMyPeerConnection] = useState(null);
     let myPeerConnection;
+    // let myStream;
     const myPeerConnectionRef = useRef(null);
 
     async function getMedia() {
@@ -201,53 +202,69 @@ function Room() {
                 audio: true,
                 video: true,
             });
-            setMyVideoStream(myStream);
             myFaceRef.current.srcObject = myStream;
+            setMyVideoStream((prev) => (prev = myStream));
+            console.log(myVideoStream, "a");
+            // console.log(myFaceRef);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async function startVideo() {
+        try {
+            await getMedia();
         } catch (e) {
             console.log(e);
         }
     }
 
     function makeConnection() {
+        // const pc = new RTCPeerConnection();
+        // setMyPeerConnection(pc);
+
         myPeerConnection = new RTCPeerConnection();
         myPeerConnectionRef.current = new RTCPeerConnection();
         //! 바로 myVideoStream을 가져오지 못함
-        // console.log(myVideoStream);
-        myVideoStream
-            ?.getTracks()
-            .forEach((track) =>
-                myPeerConnection.addTrack(track, myVideoStream)
-            );
+        // myVideoStream
+        //     .getTracks()
+        //     .forEach((track) =>
+        //         myPeerConnection.addTrack(track, myVideoStream)
+        //     );
         myVideoStream
             ?.getTracks()
             .forEach((track) =>
                 myPeerConnectionRef.current.addTrack(track, myVideoStream)
             );
+
+        console.log(myVideoStream, "c");
     }
-    // getMedia();
-    async function startVideo() {
-        try {
-            // await getMedia();
-            // makeConnection();
-        } catch (e) {
-            console.log(e);
-        }
-    }
+
     useEffect(() => {
+        // getMedia();
+        // console.log(myVideoStream, "b");
         socket.on("join-room", async (welcome) => {
             makeConnection();
+            console.log(myPeerConnectionRef);
             console.log(`${storedData.userId}님이 입장하셨습니다.${welcome}`);
 
-            const offer = await myPeerConnection.createOffer();
-            myPeerConnection.setLocalDescription(offer);
-            socket.emit("offer", { offer, roomName: current_room_id });
-            console.log(offer);
-        });
+            // const offer = await myPeerConnection.createOffer();
+            // myPeerConnection.setLocalDescription(offer);
+            // const offer = await myPeerConnectionRef.current.createOffer();
+            // myPeerConnectionRef.current.setLocalDescription(offer);
 
-        socket.on("offer", (offer) => {
-            console.log(offer.offer);
+            // socket.emit("offer", { offer, roomName: current_room_id });
+
+            // console.log(offer);
         });
-    }, []);
+        socket.on("offer", async ({ offer }) => {
+            //     console.log(myPeerConnection);
+            // console.log(myPeerConnectionRef);
+            // myPeerConnectionRef?.current.setRemoteDescription(offer);
+            // myPeerConnection?.setRemoteDescription(offer);
+        });
+    }, [socket]);
+    useEffect(() => {}, [myPeerConnection]);
 
     //! 비디오 끄고 켜기
     const volumeControl = () => {
@@ -267,7 +284,7 @@ function Room() {
     //! audio 끝!
     useEffect(() => {
         // console.log(current_room_id);
-        getMedia();
+        startVideo();
 
         socket.emit("join-room", current_room_id, async () => {
             // console.log(`${storedData.userId}님이 입장하셨습니다.`);
@@ -598,7 +615,7 @@ function Room() {
                             <Route path="quiz" element={<Quiz />} />
                         </Routes>
                         <div id="myStream">
-                            <button onClick={startVideo}>start</button>
+                            {/* <button onClick={startVideo}>start</button> */}
                             <video
                                 id="myFace"
                                 autoPlay
