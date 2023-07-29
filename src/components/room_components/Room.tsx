@@ -220,6 +220,16 @@ function Room() {
     //     }
     // }
 
+    // function handleIce(data) {
+    //     console.log("send ice candidate");
+    //     socket.emit("ice", { ice: data.candidate, roomName: current_room_id });
+    //     console.log(data);
+    // }
+    // function handleAddStream(data) {
+    //     console.log("got an event from my peer");
+    //     console.log(data.stream);
+    //     console.log(myVideoStream);
+    // }
     function makeConnection() {
         myPeerConnectionRef.current = new RTCPeerConnection();
         myVideoStream
@@ -227,8 +237,39 @@ function Room() {
             .forEach((track) =>
                 myPeerConnectionRef.current.addTrack(track, myVideoStream)
             );
+        console.log(myPeerConnectionRef.current);
+        //! icecandidate 연결되는지 확인 안됨
+        myPeerConnectionRef.current.addEventListener("icecandidate", (data) => {
+            if (data.candidate) {
+                console.log("ICE candidate generated:", data.candidate);
+                socket.emit("ice", {
+                    ice: data.candidate,
+                    roomName: current_room_id,
+                });
+            }
+        });
+        myPeerConnectionRef.current.addEventListener("addstream", (data) => {
+            if (data.stream) {
+                console.log("got an event from my peer");
+                console.log(data.stream);
+                console.log(myVideoStream);
+            }
+        });
+        // myPeerConnectionRef.current.onicecandidate = handleIce;
+        // myPeerConnectionRef.current.onaddstream = handleAddStream;
         console.log(myPeerConnectionRef);
     }
+
+    // useEffect(() => {
+    //     myPeerConnectionRef?.current?.addEventListener(
+    //         "icecandidate",
+    //         handleIce
+    //     );
+    //     myPeerConnectionRef?.current?.addEventListener(
+    //         "addstream",
+    //         handleAddStream
+    //     );
+    // }, [myPeerConnectionRef]);
 
     useEffect(() => {
         makeConnection();
@@ -238,26 +279,32 @@ function Room() {
 
             const offer = await myPeerConnectionRef.current.createOffer();
             myPeerConnectionRef.current.setLocalDescription(offer);
-
+            console.log("send offer");
             socket.emit("offer", { offer, roomName: current_room_id });
         });
         //!  offer는 뒤에 들어온 브라우저(b)에서 실행
         socket.on("offer", async ({ offer }) => {
-            console.log(myPeerConnectionRef);
+            console.log("recieve offer");
+
             await myPeerConnectionRef.current.setRemoteDescription(offer);
-            console.log(myPeerConnectionRef);
+            // console.log(myPeerConnectionRef);
             const answer = await myPeerConnectionRef.current.createAnswer();
-            console.log(answer);
+            // console.log(answer);
             myPeerConnectionRef.current.setLocalDescription(answer);
-            console.log(myPeerConnectionRef);
+            // console.log(myPeerConnectionRef);
+            console.log("send answer");
             socket.emit("answer", { answer, roomName: current_room_id });
-            console.log("a");
+            // console.log("a");
         });
         //! a 브라우저에서 실행 => 두 브라우져는 모두 local과 remote를 가지게 됨
         socket.on("answer", async ({ answer }) => {
-            console.log("b");
+            console.log("recieve answer");
             await myPeerConnectionRef.current.setRemoteDescription(answer);
             console.log(myPeerConnectionRef);
+        });
+        socket.on("ice", ({ ice }) => {
+            console.log("recieve candidate");
+            myPeerConnectionRef.current.addIceCandidate(ice);
         });
     }, []);
 
