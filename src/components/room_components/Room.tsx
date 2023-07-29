@@ -192,11 +192,10 @@ function Room() {
     const peerFaceRef = useRef(null);
 
     // const [myPeerConnection, setMyPeerConnection] = useState(null);
-    let myPeerConnection;
-    // let myStream;
+
     const myPeerConnectionRef = useRef(null);
 
-    async function getMedia() {
+    async function initCall() {
         try {
             const myStream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
@@ -204,67 +203,63 @@ function Room() {
             });
             myFaceRef.current.srcObject = myStream;
             setMyVideoStream((prev) => (prev = myStream));
-            console.log(myVideoStream, "a");
-            // console.log(myFaceRef);
         } catch (e) {
             console.log(e);
         }
     }
+    // useEffect(() => {
+    //     console.log(myVideoStream, "d");
+    // }, [myVideoStream]);
 
-    async function startVideo() {
-        try {
-            await getMedia();
-        } catch (e) {
-            console.log(e);
-        }
-    }
+    // async function startVideo() {
+    //     try {
+    //         await initCall();
+    //         makeConnection();
+    //     } catch (e) {
+    //         console.log(e);
+    //     }
+    // }
 
     function makeConnection() {
-        // const pc = new RTCPeerConnection();
-        // setMyPeerConnection(pc);
-
-        myPeerConnection = new RTCPeerConnection();
         myPeerConnectionRef.current = new RTCPeerConnection();
-        //! 바로 myVideoStream을 가져오지 못함
-        // myVideoStream
-        //     .getTracks()
-        //     .forEach((track) =>
-        //         myPeerConnection.addTrack(track, myVideoStream)
-        //     );
         myVideoStream
             ?.getTracks()
             .forEach((track) =>
                 myPeerConnectionRef.current.addTrack(track, myVideoStream)
             );
-
-        console.log(myVideoStream, "c");
+        console.log(myPeerConnectionRef);
     }
 
     useEffect(() => {
-        // getMedia();
-        // console.log(myVideoStream, "b");
+        makeConnection();
+        //! join-room 은 기존의 브라우저(a)에서 실행,
         socket.on("join-room", async (welcome) => {
-            makeConnection();
-            console.log(myPeerConnectionRef);
             console.log(`${storedData.userId}님이 입장하셨습니다.${welcome}`);
 
-            // const offer = await myPeerConnection.createOffer();
-            // myPeerConnection.setLocalDescription(offer);
-            // const offer = await myPeerConnectionRef.current.createOffer();
-            // myPeerConnectionRef.current.setLocalDescription(offer);
+            const offer = await myPeerConnectionRef.current.createOffer();
+            myPeerConnectionRef.current.setLocalDescription(offer);
 
-            // socket.emit("offer", { offer, roomName: current_room_id });
-
-            // console.log(offer);
+            socket.emit("offer", { offer, roomName: current_room_id });
         });
+        //!  offer는 뒤에 들어온 브라우저(b)에서 실행
         socket.on("offer", async ({ offer }) => {
-            //     console.log(myPeerConnection);
-            // console.log(myPeerConnectionRef);
-            // myPeerConnectionRef?.current.setRemoteDescription(offer);
-            // myPeerConnection?.setRemoteDescription(offer);
+            console.log(myPeerConnectionRef);
+            await myPeerConnectionRef.current.setRemoteDescription(offer);
+            console.log(myPeerConnectionRef);
+            const answer = await myPeerConnectionRef.current.createAnswer();
+            console.log(answer);
+            myPeerConnectionRef.current.setLocalDescription(answer);
+            console.log(myPeerConnectionRef);
+            socket.emit("answer", { answer, roomName: current_room_id });
+            console.log("a");
         });
-    }, [socket]);
-    useEffect(() => {}, [myPeerConnection]);
+        //! a 브라우저에서 실행 => 두 브라우져는 모두 local과 remote를 가지게 됨
+        socket.on("answer", async ({ answer }) => {
+            console.log("b");
+            await myPeerConnectionRef.current.setRemoteDescription(answer);
+            console.log(myPeerConnectionRef);
+        });
+    }, []);
 
     //! 비디오 끄고 켜기
     const volumeControl = () => {
@@ -283,12 +278,11 @@ function Room() {
     };
     //! audio 끝!
     useEffect(() => {
+        initCall();
         // console.log(current_room_id);
-        startVideo();
+        // startVideo();
 
-        socket.emit("join-room", current_room_id, async () => {
-            // console.log(`${storedData.userId}님이 입장하셨습니다.`);
-        });
+        socket.emit("join-room", current_room_id);
         // return () => {
         //     socket.emit("disconnect");
         //     socket.off();
@@ -620,8 +614,8 @@ function Room() {
                                 id="myFace"
                                 autoPlay
                                 // muted
-                                width={100}
-                                height={100}
+                                width={200}
+                                height={200}
                                 ref={myFaceRef}
                             ></video>
                         </div>
